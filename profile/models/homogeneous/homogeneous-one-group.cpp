@@ -18,8 +18,12 @@ int main() {
 
   /* Set logging information */
   set_log_level("NORMAL");
-  log_printf(TITLE, "Simulating a one group homogeneous infinite medium...");
-  log_printf(HEADER, "The reference keff = 1.43...");
+  log_printf(NORMAL, "Simulating a one group homogeneous infinite medium");
+  log_printf(TITLE, "Simulating a one group homogeneous infinite medium");
+  log_printf(HEADER, "The reference keff = 1.43");
+  log_printf(NORMAL, "Simulating a one group homogeneous infinite medium...Simulating a one group homogeneous infinite medium...Simulating a one group homogeneous infinite medium...%d",max_iters);
+  log_printf(TITLE, "Simulating a one group homogeneous infinite medium...Simulating a one group homogeneous infinite medium...Simulating a one group homogeneous infinite medium...%d",max_iters);
+  log_printf(HEADER, "The reference keff = 1.43...The reference keff = 1.43...The reference keff = 1.43...The reference keff = 1.43...The reference keff = 1.43...The reference keff = 1.43...%d",max_iters);
 
   /* Create materials */
   log_printf(NORMAL, "Creating materials...");

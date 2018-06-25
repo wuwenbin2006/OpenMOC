@@ -4,19 +4,21 @@
 
 COMPILER    = gnu
 OPENMP      = yes
-OPTIMIZE    = yes
-DEBUG       = no
+OPTIMIZE    = no
+DEBUG       = yes
 PROFILE     = no
-PRECISION   = single
+PRECISION   = double
 
 #===============================================================================
 # Source Code List
 #===============================================================================
 
-case = c5g7/c5g7-cmfd.cpp
+#case = c5g7/c5g7-cmfd.cpp
+case = homogeneous/homogeneous-one-group.cpp
 
 source = \
 Cell.cpp \
+Region.cpp \
 Cmfd.cpp \
 CPUSolver.cpp \
 ExpEvaluator.cpp \

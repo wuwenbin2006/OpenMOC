@@ -1,3 +1,6 @@
+import sys
+#sys.path.append("/mnt/e/OpenMOC_3D/OpenMOC/openmoc_Giud_my_3D_df2/lib/python3.5/site-packages/")
+sys.path.append("/mnt/e/OpenMOC_3D/OpenMOC/openmoc_3D_dev/lib/python3.5/site-packages/")
 import openmoc
 import openmoc.log as log
 import openmoc.plotter as plotter
@@ -58,7 +61,7 @@ log.py_printf('NORMAL', 'Creating Cmfd mesh...')
 cmfd = openmoc.Cmfd()
 cmfd.setSORRelaxationFactor(1.5)
 cmfd.setLatticeStructure(51,51,9*axial_refines)
-cmfd.setGroupStructure([1,4,8])
+cmfd.setGroupStructure([[1,2,3],[4,5,6,7]])
 cmfd.setCentroidUpdateOn(False)
 
 ###############################################################################
@@ -86,7 +89,7 @@ track_generator = openmoc.TrackGenerator3D(geometry, num_azim, num_polar,
 track_generator.setQuadrature(quad)
 track_generator.setNumThreads(num_threads)
 track_generator.setSegmentFormation(openmoc.OTF_STACKS)
-track_generator.setSegmentationHeights([0.1])
+track_generator.setSegmentationZones([-32.13, -10.71, 10.71, 32.13])
 track_generator.generateTracks()
 
 ###############################################################################

@@ -1,3 +1,6 @@
+import sys
+#sys.path.append("/mnt/e/OpenMOC_3D/OpenMOC/openmoc_Giud_my_3D_df2/lib/python3.5/site-packages/")
+sys.path.append("/mnt/e/OpenMOC_3D/OpenMOC/openmoc_3D_dev/lib/python3.5/site-packages/")
 import openmoc
 import openmoc.log as log
 import openmoc.plotter as plotter

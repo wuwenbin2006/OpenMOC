@@ -2017,3 +2017,12 @@ int Lattice::getLatticeSurfaceOTF(int cell, double z, int surface_2D) {
   else
     return NUM_SURFACES * cell + surface_2D % NUM_SURFACES;
 }
+
+
+void Lattice::setWidths(std::vector<double> widths_x, 
+                  std::vector<double> widths_y, std::vector<double> widths_z){
+  
+  _widths_x = widths_x;
+  _widths_y = widths_y;
+  _widths_z = widths_z;
+}

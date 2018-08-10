@@ -168,12 +168,15 @@ private:
 
   /** The width of each Lattice cell (cm) along the x-axis */
   double _width_x;
+  std::vector<double> _widths_x;
 
   /** The width of each Lattice cell (cm) along the y-axis */
   double _width_y;
+  std::vector<double> _widths_y;
 
   /** The width of each Lattice cell (cm) along the z-axis */
   double _width_z;
+  std::vector<double> _widths_z;
 
   /** The coordinates of the offset for the Universe */
   Point _offset;
@@ -234,6 +237,10 @@ public:
 
   std::string toString();
   void printString();
+  
+  void setWidths(std::vector<double> widths_x, std::vector<double> widths_y, 
+                 std::vector<double> widths_z);
+  
 };
 
 /**

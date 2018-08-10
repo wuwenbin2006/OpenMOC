@@ -191,7 +191,10 @@ private:
   double _cell_width_x;
   double _cell_width_y;
   double _cell_width_z;
-
+  std::vector<double> _cell_widths_x;//global for whole geom. cmfd mesh widths
+  std::vector<double> _cell_widths_y;
+  std::vector<double> _cell_widths_z;
+  
   /** Array of geometry boundaries */
   boundaryType* _boundaries;
 
@@ -454,6 +457,8 @@ public:
   void setFSRSources(FP_PRECISION* sources);
   void setCellFSRs(std::vector< std::vector<long> >* cell_fsrs);
   void setFluxMoments(FP_PRECISION* flux_moments);
+  
+  void setWidths(std::vector< std::vector<double> > widths);
 };
 
 

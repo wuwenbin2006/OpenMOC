@@ -123,7 +123,7 @@ root_cell.setFill(lattice)
 log.py_printf('NORMAL', 'Creating Cmfd mesh...')
 
 cmfd = openmoc.Cmfd()
-cmfd.setLatticeStructure(2,2,4)
+cmfd.setLatticeStructure(5,5,4)
 cmfd.setKNearest(3)
 
 ###############################################################################

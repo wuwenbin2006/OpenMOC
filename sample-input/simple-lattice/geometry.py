@@ -47,13 +47,13 @@ log.py_printf('NORMAL', 'Creating cells...')
 
 large_fuel = openmoc.Cell()
 large_fuel.setFill(materials['UO2'])
-large_fuel.setNumRings(3)
+large_fuel.setNumRings(1)
 #large_fuel.setNumSectors(2)
 large_fuel.addSurface(halfspace=-1, surface=large_zcylinder)
 
 large_moderator = openmoc.Cell()
 large_moderator.setFill(materials['Water'])
-large_moderator.setNumRings(3)
+large_moderator.setNumRings(1)
 #large_moderator.setNumSectors(5)
 large_moderator.addSurface(halfspace=+1, surface=large_zcylinder)
 
@@ -74,9 +74,16 @@ small_fuel.setFill(materials['UO2'])
 #small_fuel.setNumSectors(2)
 small_fuel.addSurface(halfspace=-1, surface=small_zcylinder)
 
+small_moderator1 = openmoc.Cell()
+small_moderator1.setFill(materials['Water'])
+small_moderator1.addSurface(halfspace=+1, surface=small_zcylinder)
+small_moderator1.addSurface(halfspace=-1, surface=large_zcylinder)
+#small_moderator1.setNumRings(2)
+#small_moderator1.setNumSectors(3)
+
 small_moderator = openmoc.Cell()
 small_moderator.setFill(materials['Water'])
-small_moderator.addSurface(halfspace=+1, surface=small_zcylinder)
+small_moderator.addSurface(halfspace=+1, surface=large_zcylinder)
 
 root_cell = openmoc.Cell()
 root_cell.addSurface(halfspace=+1, surface=xmin)
@@ -103,6 +110,7 @@ pin2.addCell(medium_fuel)
 pin2.addCell(medium_moderator)
 pin3.addCell(small_fuel)
 pin3.addCell(small_moderator)
+pin3.addCell(small_moderator1)
 root_universe.addCell(root_cell)
 
 

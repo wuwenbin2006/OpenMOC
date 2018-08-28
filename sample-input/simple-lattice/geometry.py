@@ -47,14 +47,14 @@ log.py_printf('NORMAL', 'Creating cells...')
 
 large_fuel = openmoc.Cell()
 large_fuel.setFill(materials['UO2'])
-large_fuel.setNumRings(1)
-#large_fuel.setNumSectors(2)
+large_fuel.setNumRings(2)
+large_fuel.setNumSectors(4)
 large_fuel.addSurface(halfspace=-1, surface=large_zcylinder)
 
 large_moderator = openmoc.Cell()
 large_moderator.setFill(materials['Water'])
 large_moderator.setNumRings(1)
-#large_moderator.setNumSectors(5)
+large_moderator.setNumSectors(5)
 large_moderator.addSurface(halfspace=+1, surface=large_zcylinder)
 
 medium_fuel = openmoc.Cell()

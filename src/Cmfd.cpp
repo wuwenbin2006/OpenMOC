@@ -3200,6 +3200,7 @@ void Cmfd::initializeLattice(Point* offset) {
   _lattice->setNumY(_num_y);
   _lattice->setNumZ(_num_z);
   _lattice->setWidth(_cell_width_x, _cell_width_y, _cell_width_z);
+  _lattice->setWidths(_cell_widths_x, _cell_widths_y, _cell_widths_z);
   _lattice->setOffset(offset->getX(), offset->getY(), offset->getZ());
 }
 
@@ -4679,3 +4680,16 @@ void Cmfd::recordNetCurrents() {
     }
   }
 }
+
+
+void Cmfd::setWidths(std::vector< std::vector<double> > widths){
+  
+  setNumX(widths[0].size());
+  setNumY(widths[1].size());
+  setNumZ(widths[2].size());
+  _cell_widths_x = widths[0];
+  _cell_widths_y = widths[1];
+  _cell_widths_z = widths[2]; 
+  
+}
+

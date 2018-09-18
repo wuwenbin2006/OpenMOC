@@ -137,6 +137,7 @@ log.py_printf('NORMAL', 'Creating Cmfd mesh...')
 
 cmfd = openmoc.Cmfd()
 cmfd.setLatticeStructure(2,2,5)
+cmfd.setGroupStructure([[1,2,3],[4,5],[6,7]])
 cmfd.setKNearest(3)
 
 ###############################################################################

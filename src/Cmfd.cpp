@@ -48,6 +48,8 @@ Cmfd::Cmfd() {
   _check_neutron_balance = false;
   _old_dif_surf_valid = false;
 
+  _non_uniform = false;
+  
   /* Energy group and polar angle problem parameters */
   _num_moc_groups = 0;
   _num_cmfd_groups = 0;
@@ -359,7 +361,7 @@ CMFD_PRECISION*** Cmfd::getBoundarySurfaceCurrents() {
  */
 void Cmfd::setWidthX(double width) {
   _width_x = width;
-  if (_num_x != 0)
+  if (!_non_uniform && _num_x != 0)
     _cell_width_x = _width_x / _num_x;
 }
 
@@ -370,7 +372,7 @@ void Cmfd::setWidthX(double width) {
  */
 void Cmfd::setWidthY(double width) {
   _width_y = width;
-  if (_num_y != 0)
+  if (!_non_uniform && _num_y != 0)
     _cell_width_y = _width_y / _num_y;
 }
 
@@ -381,7 +383,7 @@ void Cmfd::setWidthY(double width) {
  */
 void Cmfd::setWidthZ(double width) {
   _width_z = width;
-  if (_num_z != 0)
+  if (!_non_uniform && _num_z != 0)
     _cell_width_z = _width_z / _num_z;
 }
 
@@ -1582,8 +1584,12 @@ int Cmfd::findCmfdSurface(int cell, LocalCoords* coords) {
 int Cmfd::findCmfdCell(LocalCoords* coords) {
   Point* point = coords->getHighestLevel()->getPoint();
   int global_cmfd_cell = _lattice->getLatticeCell(point);
-  int local_cmfd_cell = getLocalCMFDCell(global_cmfd_cell);
-  return local_cmfd_cell;
+  if (_geometry->isDomainDecomposed()) {
+    int local_cmfd_cell = getLocalCMFDCell(global_cmfd_cell);
+    return local_cmfd_cell;
+  }
+  else
+    return global_cmfd_cell;
 }
 
 
@@ -3273,8 +3279,11 @@ void Cmfd::initializeLattice(Point* offset) {
   _lattice->setNumX(_num_x);
   _lattice->setNumY(_num_y);
   _lattice->setNumZ(_num_z);
-  _lattice->setWidth(_cell_width_x, _cell_width_y, _cell_width_z);
-  _lattice->setWidths(_cell_widths_x, _cell_widths_y, _cell_widths_z);
+  if(_non_uniform)
+    _lattice->setWidths(_cell_widths_x, _cell_widths_y, _cell_widths_z);
+  else
+    _lattice->setWidth(_cell_width_x, _cell_width_y, _cell_width_z);
+  
   _lattice->setOffset(offset->getX(), offset->getY(), offset->getZ());
 }
 
@@ -4741,8 +4750,9 @@ void Cmfd::recordNetCurrents() {
 }
 
 
-void Cmfd::setWidths(std::vector< std::vector<double> > widths){
+void Cmfd::setWidths(std::vector< std::vector<double> > widths) {
   
+  _non_uniform = true;
   setNumX(widths[0].size());
   setNumY(widths[1].size());
   setNumZ(widths[2].size());

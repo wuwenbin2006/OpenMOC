@@ -166,17 +166,23 @@ private:
   /** The number of Lattice cells along the z-axis */
   int _num_z;
 
+  /** True if the lattice is non-uniform */
+  bool _non_uniform;
+  
   /** The width of each Lattice cell (cm) along the x-axis */
   double _width_x;
   std::vector<double> _widths_x;
+  std::vector<double> _accumulate_x;
 
   /** The width of each Lattice cell (cm) along the y-axis */
   double _width_y;
   std::vector<double> _widths_y;
+  std::vector<double> _accumulate_y;
 
   /** The width of each Lattice cell (cm) along the z-axis */
   double _width_z;
   std::vector<double> _widths_z;
+  std::vector<double> _accumulate_z;
 
   /** The coordinates of the offset for the Universe */
   Point _offset;

@@ -1560,7 +1560,8 @@ void Cmfd::initializeGroupMap() {
  */
 int Cmfd::findCmfdSurface(int cell, LocalCoords* coords) {
   Point* point = coords->getHighestLevel()->getPoint();
-  cell = getGlobalCMFDCell(cell);
+  if (_geometry->isDomainDecomposed())
+    cell = getGlobalCMFDCell(cell);
   return _lattice->getLatticeSurface(cell, point);
 }
 

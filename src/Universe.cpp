@@ -977,6 +977,8 @@ Lattice::Lattice(const int id, const char* name): Universe(id, name) {
   _width_x = 0;
   _width_y = 0;
   _width_z = 0;
+  
+  _non_uniform = false;
 }
 
 
@@ -1597,10 +1599,17 @@ double Lattice::minSurfaceDist(Point* point, double azim, double polar) {
   if (u_z > 0)
     lat_z++;
 
+  /* get the length of the lattice */
+  double length_x = _non_uniform? _accumulate_x[_num_x] : _num_x*_width_x;
+  double length_y = _non_uniform? _accumulate_y[_num_y] : _num_y*_width_y;
+  double length_z = _non_uniform? _accumulate_z[_num_z] : _num_z*_width_z;
+  
+  
   /* Get the min distance for X PLANE  */
   double dist_x;
   if (fabs(u_x) > FLT_EPSILON) {
-    double plane_x = lat_x * _width_x - _width_x*_num_x/2 + _offset.getX();
+    double plane_x = (_non_uniform? _accumulate_x[lat_x] : lat_x * _width_x) 
+                     - length_x/2 + _offset.getX();
     dist_x = (plane_x - point->getX()) / u_x;
   }
   else {
@@ -1610,7 +1619,8 @@ double Lattice::minSurfaceDist(Point* point, double azim, double polar) {
   /* Get the min distance for Y PLANE  */
   double dist_y;
   if (fabs(u_y) > FLT_EPSILON) {
-    double plane_y = lat_y * _width_y - _width_y*_num_y/2 + _offset.getY();
+    double plane_y = (_non_uniform? _accumulate_y[lat_y] : lat_y * _width_y) 
+                     - length_y/2 + _offset.getY();
     dist_y = (plane_y - point->getY()) / u_y;
   }
   else {
@@ -1621,7 +1631,8 @@ double Lattice::minSurfaceDist(Point* point, double azim, double polar) {
   double dist_z;
   if (fabs(u_z) > FLT_EPSILON && 
       _width_z != std::numeric_limits<double>::infinity()) {
-    double plane_z = lat_z * _width_z - _width_z*_num_z/2 + _offset.getZ();
+    double plane_z = (_non_uniform? _accumulate_z[lat_z] : lat_z * _width_z) 
+                     - length_z/2 + _offset.getZ();
     dist_z = (plane_z - point->getZ()) / u_z;
   }
   else {
@@ -1640,18 +1651,30 @@ double Lattice::minSurfaceDist(Point* point, double azim, double polar) {
  */
 int Lattice::getLatX(Point* point) {
 
-  /* Compute the x indice for the Lattice cell this point is in */
-  int lat_x = (int)floor((point->getX() + _width_x*_num_x/2.0 -
-                          _offset.getX()) / _width_x);
-
+  int lat_x;
+  /* get the length of the lattice */
+  double length_x = _non_uniform? _accumulate_x[_num_x] : _num_x*_width_x;
+  
   /* get the distance to the left surface */
-  double dist_to_left = point->getX() + _num_x*_width_x/2.0 - _offset.getX();
+  double dist_to_left = point->getX() + length_x/2.0 - _offset.getX();
+  
+  /* Compute the x indice for the Lattice cell this point is in */
+  if(_non_uniform) {
+    for(int i=0; i<_num_x; i++) {
+      if(dist_to_left >= _accumulate_x[i] && dist_to_left < _accumulate_x[i+1]){
+        lat_x = i;
+        break;
+      }
+    }
+  }
+  else
+    lat_x = (int)floor(dist_to_left / _width_x);
 
   /* Check if the Point is on the Lattice boundaries and if so adjust
    * x Lattice cell indice */
   if (fabs(dist_to_left) < ON_SURFACE_THRESH)
     lat_x = 0;
-  else if (fabs(dist_to_left - _num_x*_width_x) < ON_SURFACE_THRESH)
+  else if (fabs(dist_to_left - length_x) < ON_SURFACE_THRESH)
     lat_x = _num_x - 1;
   else if (lat_x < 0 || lat_x > _num_x-1)
     log_printf(ERROR, "Trying to get lattice x index for point that is "
@@ -1669,18 +1692,32 @@ int Lattice::getLatX(Point* point) {
  */
 int Lattice::getLatY(Point* point) {
 
-  /* Compute the y indice for the Lattice cell this point is in */
-  int lat_y = (int)floor((point->getY() + _width_y*_num_y/2.0 -
-                          _offset.getY()) / _width_y);
-
+  int lat_y;
+  /* get the length of the lattice */
+  double length_y = _non_uniform? _accumulate_y[_num_y] : _num_y*_width_y;
+  
   /* get the distance to the bottom surface */
-  double dist_to_bottom = point->getY() + _width_y*_num_y/2.0 - _offset.getY();
+  double dist_to_bottom = point->getY() + length_y/2.0 - _offset.getY();
+  
+  /* Compute the y indice for the Lattice cell this point is in */
+  if(_non_uniform) {
+    for(int i=0; i<_num_y; i++) {
+      if(dist_to_bottom >= _accumulate_y[i] && 
+          dist_to_bottom < _accumulate_y[i+1]){
+        lat_y = i;
+        break;
+      }
+    }
+  }
+  else
+    lat_y = (int)floor(dist_to_bottom / _width_y);
+
 
   /* Check if the Point is on the Lattice boundaries and if so adjust
    * y Lattice cell indice */
   if (fabs(dist_to_bottom) < ON_SURFACE_THRESH)
     lat_y = 0;
-  else if (fabs(dist_to_bottom - _num_y*_width_y) < ON_SURFACE_THRESH)
+  else if (fabs(dist_to_bottom - length_y) < ON_SURFACE_THRESH)
     lat_y = _num_y - 1;
   else if (lat_y < 0 || lat_y > _num_y-1)
     log_printf(ERROR, "Trying to get lattice y index for point that is "
@@ -1702,18 +1739,31 @@ int Lattice::getLatZ(Point* point) {
   if (_width_z == std::numeric_limits<double>::infinity())
     return 0;
 
-  /* Compute the z indice for the Lattice cell this point is in */
-  int lat_z = (int)floor((point->getZ() + _width_z*_num_z/2.0 -
-                          _offset.getZ()) / _width_z);
-
+  int lat_z;
+  /* get the length of the lattice */
+  double length_z = _non_uniform? _accumulate_z[_num_z] : _num_z*_width_z;
+  
   /* get the distance to the bottom surface */
-  double dist_to_bottom = point->getZ() + _width_z*_num_z/2.0 - _offset.getZ();
+  double dist_to_bottom = point->getZ() + length_z/2.0 - _offset.getZ();
+  
+  /* Compute the y indice for the Lattice cell this point is in */
+  if(_non_uniform) {
+    for(int i=0; i<_num_z; i++) {
+      if(dist_to_bottom >= _accumulate_z[i] && 
+          dist_to_bottom < _accumulate_z[i+1]){
+        lat_z = i;
+        break;
+      }
+    }
+  }
+  else
+    lat_z = (int)floor(dist_to_bottom / _width_z);
 
   /* Check if the Point is on the Lattice boundaries and if so adjust
    * z Lattice cell indice */
   if (fabs(dist_to_bottom) < ON_SURFACE_THRESH)
     lat_z = 0;
-  else if (fabs(dist_to_bottom - _num_z*_width_z) < ON_SURFACE_THRESH)
+  else if (fabs(dist_to_bottom - length_z) < ON_SURFACE_THRESH)
     lat_z = _num_z - 1;
   else if (lat_z < 0 || lat_z > _num_z-1)
     log_printf(ERROR, "Trying to get lattice z index for point that is "
@@ -2020,9 +2070,25 @@ int Lattice::getLatticeSurfaceOTF(int cell, double z, int surface_2D) {
 
 
 void Lattice::setWidths(std::vector<double> widths_x, 
-                  std::vector<double> widths_y, std::vector<double> widths_z){
-  
+                  std::vector<double> widths_y, std::vector<double> widths_z) {
+  _non_uniform = true;
   _widths_x = widths_x;
   _widths_y = widths_y;
   _widths_z = widths_z;
+  
+  _accumulate_x.resize(_num_x+1,0.0);
+  _accumulate_y.resize(_num_y+1,0.0);
+  _accumulate_z.resize(_num_z+1,0.0);
+  
+  for(int i=0; i<_num_x; i++)
+    _accumulate_x[i+1] = _accumulate_x[i] + _widths_x[i];
+    
+  for(int i=0; i<_num_y; i++)
+    _accumulate_y[i+1] = _accumulate_y[i] + _widths_y[i];  
+  
+  for(int i=0; i<_num_z; i++)
+    _accumulate_z[i+1] = _accumulate_z[i] + _widths_z[i];  
 }
+
+
+

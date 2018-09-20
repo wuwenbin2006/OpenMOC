@@ -195,6 +195,9 @@ private:
   std::vector<double> _cell_widths_y;
   std::vector<double> _cell_widths_z;
   
+  /** True if the cmfd meshes are non-uniform */
+  bool _non_uniform;
+  
   /** Array of geometry boundaries */
   boundaryType* _boundaries;
 

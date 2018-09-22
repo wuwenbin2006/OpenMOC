@@ -1418,7 +1418,7 @@ void Cmfd::initializeMaterials() {
       for (int y = 0; y < _local_num_y; y++) {
         for (int x = 0; x < _local_num_x; x++) {
           int ind = z*_local_num_x*_local_num_y + y*_local_num_x + x;
-          material = new Material(ind);
+          material = new Material(ind); //ind might be greater than DEFAULT_INIT_ID, dangerous.
           material->setNumEnergyGroups(_num_cmfd_groups);
           _materials[ind] = material;
         }
@@ -2522,6 +2522,7 @@ void Cmfd::generateKNearestStencils() {
 
 
   /* Compute axial quadratic interpolation values if requested */
+//need to be fixed, considering average value and non-uniform axial meshes.
   if (_use_axial_interpolation && _local_num_z >= 3) {
 
     /* Initialize axial quadratic interpolant values */
@@ -2829,67 +2830,88 @@ double Cmfd::getDistanceToCentroid(Point* centroid, int cell_id,
   bool found = false;
   double centroid_x = centroid->getX();
   double centroid_y = centroid->getY();
+  
+  double dx = centroid_x - _lattice->getMinX();
+  double dy = centroid_y - _lattice->getMinY();
 
   /* LOWER LEFT CORNER */
   if (x > 0 && y > 0 && stencil_index == 0) {
-    dist_x = pow(centroid_x - (-_width_x/2.0 + (x - 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(centroid_y - (-_width_y/2.0 + (y - 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_non_uniform? _accumulate_x[x-1]+_cell_widths_x[x-1]/2 : 
+                (x - 0.5)*_cell_width_x), 2.0);
+    dist_y = pow(dy - (_non_uniform? _accumulate_y[y-1]+_cell_widths_y[y-1]/2 : 
+                (y - 0.5)*_cell_width_y), 2.0);
     found = true;
   }
 
   /* BOTTOM SIDE */
   else if (y > 0 && stencil_index == 1) {
-    dist_x = pow(centroid_x - (-_width_x/2.0 + (x + 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(centroid_y - (-_width_y/2.0 + (y - 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_non_uniform? _accumulate_x[x  ]+_cell_widths_x[x  ]/2 : 
+                (x + 0.5)*_cell_width_x), 2.0);
+    dist_y = pow(dy - (_non_uniform? _accumulate_y[y-1]+_cell_widths_y[y-1]/2 : 
+                (y - 0.5)*_cell_width_y), 2.0);
     found = true;
   }
 
   /* LOWER RIGHT CORNER */
   else if (x < _num_x - 1 && y > 0 && stencil_index == 2) {
-    dist_x = pow(centroid_x - (-_width_x/2.0 + (x + 1.5)*_cell_width_x), 2.0);
-    dist_y = pow(centroid_y - (-_width_y/2.0 + (y - 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_non_uniform? _accumulate_x[x+1]+_cell_widths_x[x+1]/2 : 
+                (x + 1.5)*_cell_width_x), 2.0);
+    dist_y = pow(dy - (_non_uniform? _accumulate_y[y-1]+_cell_widths_y[y-1]/2 : 
+                (y - 0.5)*_cell_width_y), 2.0);
     found = true;
   }
 
   /* LEFT SIDE */
   else if (x > 0 && stencil_index == 3) {
-    dist_x = pow(centroid_x - (-_width_x/2.0 + (x - 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(centroid_y - (-_width_y/2.0 + (y + 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_non_uniform? _accumulate_x[x-1]+_cell_widths_x[x-1]/2 : 
+                (x - 0.5)*_cell_width_x), 2.0);
+    dist_y = pow(dy - (_non_uniform? _accumulate_y[y  ]+_cell_widths_y[y  ]/2 : 
+                (y + 0.5)*_cell_width_y), 2.0);
     found = true;
   }
 
   /* CURRENT */
   else if (stencil_index == 4) {
-    dist_x = pow(centroid_x - (-_width_x/2.0 + (x + 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(centroid_y - (-_width_y/2.0 + (y + 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_non_uniform? _accumulate_x[x  ]+_cell_widths_x[x  ]/2 : 
+                (x + 0.5)*_cell_width_x), 2.0);
+    dist_y = pow(dy - (_non_uniform? _accumulate_y[y  ]+_cell_widths_y[y  ]/2 : 
+                (y + 0.5)*_cell_width_y), 2.0);
     found = true;
   }
 
   /* RIGHT SIDE */
   else if (x < _num_x - 1 && stencil_index == 5) {
-    dist_x = pow(centroid_x - (-_width_x/2.0 + (x + 1.5)*_cell_width_x), 2.0);
-    dist_y = pow(centroid_y - (-_width_y/2.0 + (y + 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_non_uniform? _accumulate_x[x+1]+_cell_widths_x[x+1]/2 : 
+                (x + 1.5)*_cell_width_x), 2.0);
+    dist_y = pow(dy - (_non_uniform? _accumulate_y[y  ]+_cell_widths_y[y  ]/2 : 
+                (y + 0.5)*_cell_width_y), 2.0);
     found = true;
   }
 
   /* UPPER LEFT CORNER */
   else if (x > 0 && y < _num_y - 1 && stencil_index == 6) {
-    dist_x = pow(centroid_x - (-_width_x/2.0 + (x - 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(centroid_y - (-_width_y/2.0 + (y + 1.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_non_uniform? _accumulate_x[x-1]+_cell_widths_x[x-1]/2 : 
+                (x - 0.5)*_cell_width_x), 2.0);
+    dist_y = pow(dy - (_non_uniform? _accumulate_y[y+1]+_cell_widths_y[y+1]/2 : 
+                (y + 1.5)*_cell_width_y), 2.0);
     found = true;
   }
 
   /* TOP SIDE */
   else if (y < _num_y - 1 && stencil_index == 7) {
-    dist_x = pow(centroid_x - (-_width_x/2.0 + (x + 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(centroid_y - (-_width_y/2.0 + (y + 1.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_non_uniform? _accumulate_x[x  ]+_cell_widths_x[x  ]/2 : 
+                (x + 0.5)*_cell_width_x), 2.0);
+    dist_y = pow(dy - (_non_uniform? _accumulate_y[y+1]+_cell_widths_y[y+1]/2 : 
+                (y + 1.5)*_cell_width_y), 2.0);
     found = true;
   }
 
   /* UPPER RIGHT CORNER */
   else if (x < _num_x - 1 && y < _num_y - 1 && stencil_index == 8) {
-    dist_x = pow(centroid_x - (-_width_x/2.0 + (x + 1.5)*_cell_width_x), 2.0);
-    dist_y = pow(centroid_y - (-_width_y/2.0 + (y + 1.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_non_uniform? _accumulate_x[x+1]+_cell_widths_x[x+1]/2 : 
+                (x + 1.5)*_cell_width_x), 2.0);
+    dist_y = pow(dy - (_non_uniform? _accumulate_y[y+1]+_cell_widths_y[y+1]/2 : 
+                (y + 1.5)*_cell_width_y), 2.0);
     found = true;
   }
 
@@ -4775,6 +4797,18 @@ void Cmfd::setWidths(std::vector< std::vector<double> > widths) {
   _cell_widths_x = widths[0];
   _cell_widths_y = widths[1];
   _cell_widths_z = widths[2]; 
+
+  _accumulate_x.resize(_num_x+1,0.0);
+  _accumulate_y.resize(_num_y+1,0.0);
+  _accumulate_z.resize(_num_z+1,0.0);
   
+  for(int i=0; i<_num_x; i++)
+    _accumulate_x[i+1] = _accumulate_x[i] + _cell_widths_x[i];
+  
+  for(int i=0; i<_num_y; i++)
+    _accumulate_y[i+1] = _accumulate_y[i] + _cell_widths_y[i];  
+  
+  for(int i=0; i<_num_z; i++)
+    _accumulate_z[i+1] = _accumulate_z[i] + _cell_widths_z[i];  
 }
 

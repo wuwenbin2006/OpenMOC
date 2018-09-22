@@ -1086,7 +1086,8 @@ double Lattice::getWidthZ() const {
  * @return the minimum reachable x-coordinate
  */
 double Lattice::getMinX() {
-  return _offset.getX() - (_num_x * _width_x / 2.);
+  return _offset.getX() - 
+         (_non_uniform? _accumulate_x[_num_x] : _num_x * _width_x)/2.;
 }
 
 
@@ -1095,7 +1096,8 @@ double Lattice::getMinX() {
  * @return the maximum reachable x-coordinate
  */
 double Lattice::getMaxX() {
-  return _offset.getX() + (_num_x * _width_x / 2.);
+  return _offset.getX() + 
+         (_non_uniform? _accumulate_x[_num_x] : _num_x * _width_x)/2.;
 }
 
 
@@ -1104,7 +1106,8 @@ double Lattice::getMaxX() {
  * @return the minimum reachable y-coordinate
  */
 double Lattice::getMinY() {
-  return _offset.getY() - (_num_y * _width_y / 2.);
+  return _offset.getY() - 
+         (_non_uniform? _accumulate_y[_num_y] : _num_y * _width_y)/2.;
 }
 
 
@@ -1113,7 +1116,8 @@ double Lattice::getMinY() {
  * @return the maximum reachable y-coordinate
  */
 double Lattice::getMaxY() {
-  return _offset.getY() + (_num_y * _width_y / 2.);
+  return _offset.getY() + 
+         (_non_uniform? _accumulate_y[_num_y] : _num_y * _width_y)/2.;
 }
 
 
@@ -1122,7 +1126,8 @@ double Lattice::getMaxY() {
  * @return the minimum reachable z-coordinate
  */
 double Lattice::getMinZ() {
-  return _offset.getZ() - (_num_z * _width_z / 2.);
+  return _offset.getZ() - 
+       (_non_uniform? _accumulate_z[_num_z] : _num_z * _width_z)/2.;
 }
 
 
@@ -1131,7 +1136,8 @@ double Lattice::getMinZ() {
  * @return the maximum reachable z-coordinate
  */
 double Lattice::getMaxZ() {
-  return _offset.getZ() + (_num_z * _width_z / 2.);
+  return _offset.getZ() + 
+         (_non_uniform? _accumulate_z[_num_z] : _num_z * _width_z)/2.;
 }
 
 

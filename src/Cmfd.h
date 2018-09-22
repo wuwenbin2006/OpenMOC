@@ -195,6 +195,11 @@ private:
   std::vector<double> _cell_widths_y;
   std::vector<double> _cell_widths_z;
   
+  std::vector<double> _accumulate_x;
+  std::vector<double> _accumulate_y;
+  std::vector<double> _accumulate_z;
+
+  
   /** True if the cmfd meshes are non-uniform */
   bool _non_uniform;
   

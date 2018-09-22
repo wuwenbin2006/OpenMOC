@@ -2615,8 +2615,8 @@ void Geometry::initializeFSRVectors() {
     for (int i=0; i < num_extruded_FSRs; i++) {
       long fsr_id = extruded_value_list[i]->_fsr_id;
       _extruded_FSR_lookup[fsr_id] = extruded_value_list[i];
-      log_printf(NORMAL, "ExtFSRId=%d, Extkey=%s\n", fsr_id, 
-                 extruded_key_list[i].c_str());
+      /* log_printf(NORMAL, "ExtFSRId=%d, Extkey=%s\n", fsr_id, 
+                 extruded_key_list[i].c_str()); */
     }
 
     delete [] extruded_key_list;

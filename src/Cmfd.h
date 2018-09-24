@@ -357,8 +357,8 @@ private:
                                                 int group, int moc_iteration,
                                                 bool correction);
   CMFD_PRECISION getDiffusionCoefficient(int cmfd_cell, int group);
-  CMFD_PRECISION getSurfaceWidth(int surface);
-  CMFD_PRECISION getPerpendicularSurfaceWidth(int surface);
+  CMFD_PRECISION getSurfaceWidth(int surface, int global_ind);
+  CMFD_PRECISION getPerpendicularSurfaceWidth(int surface, int global_ind);
   int getSense(int surface);
   int getLocalCMFDCell(int cmfd_cell); //TODO: optimize, document
   int getGlobalCMFDCell(int cmfd_cell); //TODO: optimize, document

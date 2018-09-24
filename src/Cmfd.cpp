@@ -728,8 +728,13 @@ CMFD_PRECISION Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
   int global_cmfd_cell = getGlobalCMFDCell(cmfd_cell);
   int global_cmfd_cell_next = getCellNext(global_cmfd_cell, surface);
   CMFD_PRECISION flux = _old_flux->getValue(cmfd_cell, group);
-  CMFD_PRECISION delta_interface = getSurfaceWidth(surface);
-  CMFD_PRECISION delta = getPerpendicularSurfaceWidth(surface);
+  CMFD_PRECISION delta_interface = getSurfaceWidth(surface, global_cmfd_cell);
+  CMFD_PRECISION delta = getPerpendicularSurfaceWidth(surface, global_cmfd_cell);
+  
+  CMFD_PRECISION delta_next = 0.0;
+  if(global_cmfd_cell_next != -1) 
+    delta_next = getPerpendicularSurfaceWidth(surface, global_cmfd_cell_next);
+    
   int sense = getSense(surface);
 
   /* Correct the diffusion coefficient with Larsen's effective diffusion
@@ -812,7 +817,7 @@ CMFD_PRECISION Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
 
     /* Compute the surface diffusion coefficient */
     dif_surf = 2.0 * dif_coef * dif_coef_next
-        / (delta * dif_coef + delta * dif_coef_next);
+               / (delta_next * dif_coef + delta * dif_coef_next);
 
     /* Compute the surface-averaged net current across the surface */
     current = sense * (current_out - current_in) / delta_interface;
@@ -1073,7 +1078,7 @@ void Cmfd::constructMatrices(int moc_iteration) {
         for (int s = 0; s < NUM_FACES; s++) {
 
           sense = getSense(s);
-          delta = getSurfaceWidth(s);
+          delta = getSurfaceWidth(s, global_ind);
 
           /* Set transport term on diagonal */
           dif_surf = getSurfaceDiffusionCoefficient(
@@ -3473,18 +3478,27 @@ void Cmfd::copyCurrentsToBackup() {
  * @param surface A surface index, from 0 to NUM_FACES - 1
  * @return The surface width
  */
-CMFD_PRECISION Cmfd::getSurfaceWidth(int surface) {
+CMFD_PRECISION Cmfd::getSurfaceWidth(int surface, int global_ind) {
 
   CMFD_PRECISION width;
-
+  
+  int ix = global_ind % _num_x;
+  int iy = (global_ind % (_num_x * _num_y)) / _num_x;
+  int iz = global_ind / (_num_x * _num_y);
+  
+  double width_x = _non_uniform? _cell_widths_y[iy] * _cell_widths_z[iz] :
+                   _cell_width_y * _cell_width_z;
+  double width_y = _non_uniform? _cell_widths_x[ix] * _cell_widths_z[iz] :
+                   _cell_width_x * _cell_width_z;
+  double width_z = _non_uniform? _cell_widths_x[ix] * _cell_widths_y[iy] :
+                   _cell_width_x * _cell_width_y;
+  
   if (surface == SURFACE_X_MIN || surface == SURFACE_X_MAX)
-    width = _cell_width_y * _cell_width_z;
+    return width_x;
   else if (surface == SURFACE_Y_MIN || surface == SURFACE_Y_MAX)
-    width = _cell_width_x * _cell_width_z;
+    return width_y;
   else
-    width = _cell_width_x * _cell_width_y;
-
-  return width;
+    return width_z;
 }
 
 
@@ -3493,14 +3507,18 @@ CMFD_PRECISION Cmfd::getSurfaceWidth(int surface) {
  * @param surface A surface index, from 0 to NUM_FACES - 1
  * @return The perpendicular surface width
  */
-CMFD_PRECISION Cmfd::getPerpendicularSurfaceWidth(int surface) {
+CMFD_PRECISION Cmfd::getPerpendicularSurfaceWidth(int surface, int global_ind) {
 
+  int ix = global_ind % _num_x;
+  int iy = (global_ind % (_num_x * _num_y)) / _num_x;
+  int iz = global_ind / (_num_x * _num_y);
+  
   if (surface == SURFACE_X_MIN || surface == SURFACE_X_MAX)
-    return _cell_width_x;
+    return _non_uniform? _cell_widths_x[ix] : _cell_width_x;
   else if (surface == SURFACE_Y_MIN || surface == SURFACE_Y_MAX)
-    return _cell_width_y;
+    return _non_uniform? _cell_widths_y[iy] : _cell_width_y;
   else
-    return _cell_width_z;
+    return _non_uniform? _cell_widths_z[iz] : _cell_width_z;
 }
 
 

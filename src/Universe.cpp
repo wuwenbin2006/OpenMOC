@@ -2009,8 +2009,9 @@ int Lattice::getLatticeSurfaceOTF(int cell, double z, int surface_2D) {
 
   /* Determine min and max z boundaries of the cell */
   double lat_z = cell / (_num_x*_num_y);
-  double z_min = _width_z * (lat_z - _num_z/2.0) + _offset.getZ();
-  double z_max = z_min + _width_z;
+  double z_min = (_non_uniform? _accumulate_z[lat_z] : _width_z * lat_z)
+                 + getMinZ();
+  double z_max = z_min + (_non_uniform? _widths_z[lat_z] : _width_z);
 
   /* Check for z-surface crossing on 2D surface */
   if (surface_2D % NUM_SURFACES > 9)

@@ -825,7 +825,10 @@ CMFD_PRECISION Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
     /* Compute the surface diffusion coefficient correction */
     dif_surf_corr = -(sense * dif_surf * (flux_next - flux) + current)
         / (flux_next + flux);
-
+    /*if (correction)
+      printf("cmfd_cell=%2d, surface=%2d, group=%2d,flux=%20.10E, flux_next=%20.10E, dif_surf=%20.10E, dif_surf_corr=%20.10E, current_out=%20.10E, current_in=%20.10E\n",
+                 cmfd_cell,surface,group,flux,flux_next,dif_surf,dif_surf_corr,current_out,current_in);
+*/
     /* Flux limiting condition */
     if (_flux_limiting && moc_iteration > 0) {
       double ratio = dif_surf_corr / dif_surf;

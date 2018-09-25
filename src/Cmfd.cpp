@@ -265,14 +265,15 @@ void Cmfd::setNumX(int num_x) {
   _local_num_x = _num_x;
   if (_domain_communicator != NULL)
     _local_num_x = _num_x / _domain_communicator->_num_domains_x;
-  if (_width_x != 0.)
+  if (_width_x != 0.) {
     _cell_width_x = _width_x / _num_x;
-  if(!_non_uniform) {
-    _accumulate_x.resize(_num_x+1,0.0);
-    _cell_widths_x.resize(_num_x,_width_x);
-    
-    for(int i=0; i<_num_x+1; i++)
-      _accumulate_x[i] = i * _width_x;
+    if(!_non_uniform) {
+      _accumulate_x.resize(_num_x+1,0.0);
+      _cell_widths_x.resize(_num_x,_cell_width_x);
+      
+      for(int i=0; i<_num_x+1; i++)
+        _accumulate_x[i] = i * _cell_width_x;
+    }
   }
 }
 
@@ -291,14 +292,15 @@ void Cmfd::setNumY(int num_y) {
   _local_num_y = _num_y;
   if (_domain_communicator != NULL)
     _local_num_y = _num_y / _domain_communicator->_num_domains_y;
-  if (_width_y != 0.)
+  if (_width_y != 0.) {
     _cell_width_y = _width_y / _num_y;
-  if(!_non_uniform) {
-    _accumulate_y.resize(_num_y+1,0.0);
-    _cell_widths_y.resize(_num_y,_width_y);
-    
-    for(int i=0; i<_num_y+1; i++)
-      _accumulate_y[i] = i * _width_y;
+    if(!_non_uniform) {
+      _accumulate_y.resize(_num_y+1,0.0);
+      _cell_widths_y.resize(_num_y,_cell_width_y);
+      
+      for(int i=0; i<_num_y+1; i++)
+        _accumulate_y[i] = i * _cell_width_y;
+    }
   }
 }
 
@@ -317,16 +319,26 @@ void Cmfd::setNumZ(int num_z) {
   _local_num_z = _num_z;
   if (_domain_communicator != NULL)
     _local_num_z = _num_z / _domain_communicator->_num_domains_z;
-  if (_width_z != 0.)
+  if (_width_z != 0.) {
     _cell_width_z = _width_z / _num_z;
-  if (_width_z == std::numeric_limits<double>::infinity())
-    _cell_width_z = 1.0;
-  if(!_non_uniform) {
+    if(!_non_uniform) {
     _accumulate_z.resize(_num_z+1,0.0);
-    _cell_widths_z.resize(_num_z,_width_z);
+    _cell_widths_z.resize(_num_z,_cell_width_z);
     
     for(int i=0; i<_num_z+1; i++)
-      _accumulate_z[i] = i * _width_z;
+      _accumulate_z[i] = i * _cell_width_z;
+    }
+  }
+
+  if (_width_z == std::numeric_limits<double>::infinity()) {
+    _cell_width_z = 1.0;
+    if(!_non_uniform) {
+      _accumulate_z.resize(_num_z+1,0.0);
+      _cell_widths_z.resize(_num_z,_cell_width_z);
+      
+      for(int i=0; i<_num_z+1; i++)
+        _accumulate_z[i] = i * _cell_width_z;
+      }
   }
 }
 
@@ -382,8 +394,16 @@ CMFD_PRECISION*** Cmfd::getBoundarySurfaceCurrents() {
  */
 void Cmfd::setWidthX(double width) {
   _width_x = width;
-  if (!_non_uniform && _num_x != 0)
+  if (!_non_uniform && _num_x != 0) {
     _cell_width_x = _width_x / _num_x;
+    if(!_non_uniform) {
+      _accumulate_x.resize(_num_x+1,0.0);
+      _cell_widths_x.resize(_num_x,_cell_width_x);
+      
+      for(int i=0; i<_num_x+1; i++)
+        _accumulate_x[i] = i * _cell_width_x;
+      }
+  }
 }
 
 
@@ -393,8 +413,16 @@ void Cmfd::setWidthX(double width) {
  */
 void Cmfd::setWidthY(double width) {
   _width_y = width;
-  if (!_non_uniform && _num_y != 0)
+  if (!_non_uniform && _num_y != 0) {
     _cell_width_y = _width_y / _num_y;
+    if(!_non_uniform) {
+      _accumulate_y.resize(_num_y+1,0.0);
+      _cell_widths_y.resize(_num_y,_cell_width_y);
+      
+      for(int i=0; i<_num_y+1; i++)
+        _accumulate_y[i] = i * _cell_width_y;
+      }
+  }
 }
 
 
@@ -404,8 +432,16 @@ void Cmfd::setWidthY(double width) {
  */
 void Cmfd::setWidthZ(double width) {
   _width_z = width;
-  if (!_non_uniform && _num_z != 0)
+  if (!_non_uniform && _num_z != 0) {
     _cell_width_z = _width_z / _num_z;
+    if(!_non_uniform) {
+      _accumulate_z.resize(_num_z+1,0.0);
+      _cell_widths_z.resize(_num_z,_cell_width_z);
+      
+      for(int i=0; i<_num_z+1; i++)
+        _accumulate_z[i] = i * _cell_width_z;
+      }
+  }
 }
 
 
@@ -2852,82 +2888,64 @@ double Cmfd::getDistanceToCentroid(Point* centroid, int cell_id,
 
   /* LOWER LEFT CORNER */
   if (x > 0 && y > 0 && stencil_index == 0) {
-    dist_x = pow(dx - (_non_uniform? _accumulate_x[x-1]+_cell_widths_x[x-1]/2 : 
-                (x - 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(dy - (_non_uniform? _accumulate_y[y-1]+_cell_widths_y[y-1]/2 : 
-                (y - 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_accumulate_x[x-1]+_cell_widths_x[x-1]/2), 2.0);
+    dist_y = pow(dy - (_accumulate_y[y-1]+_cell_widths_y[y-1]/2), 2.0);
     found = true;
   }
 
   /* BOTTOM SIDE */
   else if (y > 0 && stencil_index == 1) {
-    dist_x = pow(dx - (_non_uniform? _accumulate_x[x  ]+_cell_widths_x[x  ]/2 : 
-                (x + 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(dy - (_non_uniform? _accumulate_y[y-1]+_cell_widths_y[y-1]/2 : 
-                (y - 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_accumulate_x[x  ]+_cell_widths_x[x  ]/2), 2.0);
+    dist_y = pow(dy - (_accumulate_y[y-1]+_cell_widths_y[y-1]/2), 2.0);
     found = true;
   }
 
   /* LOWER RIGHT CORNER */
   else if (x < _num_x - 1 && y > 0 && stencil_index == 2) {
-    dist_x = pow(dx - (_non_uniform? _accumulate_x[x+1]+_cell_widths_x[x+1]/2 : 
-                (x + 1.5)*_cell_width_x), 2.0);
-    dist_y = pow(dy - (_non_uniform? _accumulate_y[y-1]+_cell_widths_y[y-1]/2 : 
-                (y - 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_accumulate_x[x+1]+_cell_widths_x[x+1]/2), 2.0);
+    dist_y = pow(dy - (_accumulate_y[y-1]+_cell_widths_y[y-1]/2), 2.0);
     found = true;
   }
 
   /* LEFT SIDE */
   else if (x > 0 && stencil_index == 3) {
-    dist_x = pow(dx - (_non_uniform? _accumulate_x[x-1]+_cell_widths_x[x-1]/2 : 
-                (x - 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(dy - (_non_uniform? _accumulate_y[y  ]+_cell_widths_y[y  ]/2 : 
-                (y + 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_accumulate_x[x-1]+_cell_widths_x[x-1]/2), 2.0);
+    dist_y = pow(dy - (_accumulate_y[y  ]+_cell_widths_y[y  ]/2), 2.0);
     found = true;
   }
 
   /* CURRENT */
   else if (stencil_index == 4) {
-    dist_x = pow(dx - (_non_uniform? _accumulate_x[x  ]+_cell_widths_x[x  ]/2 : 
-                (x + 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(dy - (_non_uniform? _accumulate_y[y  ]+_cell_widths_y[y  ]/2 : 
-                (y + 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_accumulate_x[x  ]+_cell_widths_x[x  ]/2), 2.0);
+    dist_y = pow(dy - (_accumulate_y[y  ]+_cell_widths_y[y  ]/2), 2.0);
     found = true;
   }
 
   /* RIGHT SIDE */
   else if (x < _num_x - 1 && stencil_index == 5) {
-    dist_x = pow(dx - (_non_uniform? _accumulate_x[x+1]+_cell_widths_x[x+1]/2 : 
-                (x + 1.5)*_cell_width_x), 2.0);
-    dist_y = pow(dy - (_non_uniform? _accumulate_y[y  ]+_cell_widths_y[y  ]/2 : 
-                (y + 0.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_accumulate_x[x+1]+_cell_widths_x[x+1]/2 ), 2.0);
+    dist_y = pow(dy - (_accumulate_y[y  ]+_cell_widths_y[y  ]/2 :), 2.0);
     found = true;
   }
 
   /* UPPER LEFT CORNER */
   else if (x > 0 && y < _num_y - 1 && stencil_index == 6) {
-    dist_x = pow(dx - (_non_uniform? _accumulate_x[x-1]+_cell_widths_x[x-1]/2 : 
-                (x - 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(dy - (_non_uniform? _accumulate_y[y+1]+_cell_widths_y[y+1]/2 : 
-                (y + 1.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_accumulate_x[x-1]+_cell_widths_x[x-1]/2), 2.0);
+    dist_y = pow(dy - (_accumulate_y[y+1]+_cell_widths_y[y+1]/2), 2.0);
     found = true;
   }
 
   /* TOP SIDE */
   else if (y < _num_y - 1 && stencil_index == 7) {
-    dist_x = pow(dx - (_non_uniform? _accumulate_x[x  ]+_cell_widths_x[x  ]/2 : 
-                (x + 0.5)*_cell_width_x), 2.0);
-    dist_y = pow(dy - (_non_uniform? _accumulate_y[y+1]+_cell_widths_y[y+1]/2 : 
-                (y + 1.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_accumulate_x[x  ]+_cell_widths_x[x  ]/2), 2.0);
+    dist_y = pow(dy - (_accumulate_y[y+1]+_cell_widths_y[y+1]/2), 2.0);
     found = true;
   }
 
   /* UPPER RIGHT CORNER */
   else if (x < _num_x - 1 && y < _num_y - 1 && stencil_index == 8) {
-    dist_x = pow(dx - (_non_uniform? _accumulate_x[x+1]+_cell_widths_x[x+1]/2 : 
-                (x + 1.5)*_cell_width_x), 2.0);
-    dist_y = pow(dy - (_non_uniform? _accumulate_y[y+1]+_cell_widths_y[y+1]/2 : 
-                (y + 1.5)*_cell_width_y), 2.0);
+    dist_x = pow(dx - (_accumulate_x[x+1]+_cell_widths_x[x+1]/2), 2.0);
+    dist_y = pow(dy - (_accumulate_y[y+1]+_cell_widths_y[y+1]/2), 2.0);
     found = true;
   }
 
@@ -3508,19 +3526,12 @@ CMFD_PRECISION Cmfd::getSurfaceWidth(int surface, int global_ind) {
   int iy = (global_ind % (_num_x * _num_y)) / _num_x;
   int iz = global_ind / (_num_x * _num_y);
   
-  double width_x = _non_uniform? _cell_widths_y[iy] * _cell_widths_z[iz] :
-                   _cell_width_y * _cell_width_z;
-  double width_y = _non_uniform? _cell_widths_x[ix] * _cell_widths_z[iz] :
-                   _cell_width_x * _cell_width_z;
-  double width_z = _non_uniform? _cell_widths_x[ix] * _cell_widths_y[iy] :
-                   _cell_width_x * _cell_width_y;
-  
   if (surface == SURFACE_X_MIN || surface == SURFACE_X_MAX)
-    return width_x;
+    return _cell_widths_y[iy] * _cell_widths_z[iz];
   else if (surface == SURFACE_Y_MIN || surface == SURFACE_Y_MAX)
-    return width_y;
+    return _cell_widths_x[ix] * _cell_widths_z[iz];
   else
-    return width_z;
+    return _cell_widths_x[ix] * _cell_widths_y[iy];
 }
 
 
@@ -3536,11 +3547,11 @@ CMFD_PRECISION Cmfd::getPerpendicularSurfaceWidth(int surface, int global_ind) {
   int iz = global_ind / (_num_x * _num_y);
   
   if (surface == SURFACE_X_MIN || surface == SURFACE_X_MAX)
-    return _non_uniform? _cell_widths_x[ix] : _cell_width_x;
+    return _cell_widths_x[ix];
   else if (surface == SURFACE_Y_MIN || surface == SURFACE_Y_MAX)
-    return _non_uniform? _cell_widths_y[iy] : _cell_width_y;
+    return _cell_widths_y[iy];
   else
-    return _non_uniform? _cell_widths_z[iz] : _cell_width_z;
+    return _cell_widths_z[iz];
 }
 
 

@@ -2926,7 +2926,7 @@ double Cmfd::getDistanceToCentroid(Point* centroid, int cell_id,
   /* RIGHT SIDE */
   else if (x < _num_x - 1 && stencil_index == 5) {
     dist_x = pow(dx - (_accumulate_x[x+1]+_cell_widths_x[x+1]/2 ), 2.0);
-    dist_y = pow(dy - (_accumulate_y[y  ]+_cell_widths_y[y  ]/2 :), 2.0);
+    dist_y = pow(dy - (_accumulate_y[y  ]+_cell_widths_y[y  ]/2 ), 2.0);
     found = true;
   }
 

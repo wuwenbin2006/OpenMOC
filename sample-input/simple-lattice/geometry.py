@@ -21,12 +21,18 @@ materials = materialize.load_from_hdf5('c5g7-mgxs.h5', '../')
 
 log.py_printf('NORMAL', 'Creating surfaces...')
 
-xmin = openmoc.XPlane(x=-2.0, name='xmin')
-xmax = openmoc.XPlane(x= 2.0, name='xmax')
-ymin = openmoc.YPlane(y=-2.0, name='ymin')
-ymax = openmoc.YPlane(y= 2.0, name='ymax')
+#xmin = openmoc.XPlane(x=-2.0, name='xmin')
+#xmax = openmoc.XPlane(x= 2.0, name='xmax')
+#ymin = openmoc.YPlane(y=-2.0, name='ymin')
+#ymax = openmoc.YPlane(y= 2.0, name='ymax')
 zmin = openmoc.ZPlane(z=-10.0, name='zmin')
 zmax = openmoc.ZPlane(z= 10.0, name='zmax')
+
+xmin = openmoc.XPlane(x=-0.0, name='xmin')
+xmax = openmoc.XPlane(x= 4.0, name='xmax')
+ymin = openmoc.YPlane(y=-0.0, name='ymin')
+ymax = openmoc.YPlane(y= 4.0, name='ymax')
+
 
 xmin.setBoundaryType(openmoc.REFLECTIVE)
 xmax.setBoundaryType(openmoc.REFLECTIVE)

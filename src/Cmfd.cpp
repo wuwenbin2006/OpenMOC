@@ -267,6 +267,13 @@ void Cmfd::setNumX(int num_x) {
     _local_num_x = _num_x / _domain_communicator->_num_domains_x;
   if (_width_x != 0.)
     _cell_width_x = _width_x / _num_x;
+  if(!_non_uniform) {
+    _accumulate_x.resize(_num_x+1,0.0);
+    _cell_widths_x.resize(_num_x,_width_x);
+    
+    for(int i=0; i<_num_x+1; i++)
+      _accumulate_x[i] = i * _width_x;
+  }
 }
 
 
@@ -286,6 +293,13 @@ void Cmfd::setNumY(int num_y) {
     _local_num_y = _num_y / _domain_communicator->_num_domains_y;
   if (_width_y != 0.)
     _cell_width_y = _width_y / _num_y;
+  if(!_non_uniform) {
+    _accumulate_y.resize(_num_y+1,0.0);
+    _cell_widths_y.resize(_num_y,_width_y);
+    
+    for(int i=0; i<_num_y+1; i++)
+      _accumulate_y[i] = i * _width_y;
+  }
 }
 
 
@@ -307,6 +321,13 @@ void Cmfd::setNumZ(int num_z) {
     _cell_width_z = _width_z / _num_z;
   if (_width_z == std::numeric_limits<double>::infinity())
     _cell_width_z = 1.0;
+  if(!_non_uniform) {
+    _accumulate_z.resize(_num_z+1,0.0);
+    _cell_widths_z.resize(_num_z,_width_z);
+    
+    for(int i=0; i<_num_z+1; i++)
+      _accumulate_z[i] = i * _width_z;
+  }
 }
 
 

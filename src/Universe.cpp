@@ -1291,6 +1291,19 @@ void Lattice::setWidth(double width_x, double width_y, double width_z) {
   _width_x = width_x;
   _width_y = width_y;
   _width_z = width_z;
+  _accumulate_x.resize(_num_x+1,0.0);
+  _accumulate_y.resize(_num_y+1,0.0);
+  _accumulate_z.resize(_num_z+1,0.0);
+  _widths_x.resize(_num_x,_width_x);
+  _widths_y.resize(_num_y,_width_y);
+  _widths_z.resize(_num_z,_width_z);
+  
+  for(int i=0; i<_num_x+1; i++)
+    _accumulate_x[i] = i * _width_x;
+  for(int i=0; i<_num_y+1; i++)
+    _accumulate_y[i] = i * _width_y;
+  for(int i=0; i<_num_z+1; i++)
+    _accumulate_z[i] = i * _width_z;
 }
 
 

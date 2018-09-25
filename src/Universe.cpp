@@ -1571,14 +1571,11 @@ Cell* Lattice::findCell(LocalCoords* coords) {
 
   /* Compute local position of Point in the next level Universe */
   double next_x = coords->getX()
-      - (-_width_x*_num_x/2.0 + _offset.getX() + (lat_x + 0.5) * _width_x)
-      + getOffset()->getX();
+      - (-_width_x*_num_x/2.0 + _offset.getX() + (lat_x + 0.5) * _width_x);
   double next_y = coords->getY()
-      - (-_width_y*_num_y/2.0 + _offset.getY() + (lat_y + 0.5) * _width_y)
-      + getOffset()->getY();
+      - (-_width_y*_num_y/2.0 + _offset.getY() + (lat_y + 0.5) * _width_y);
   double next_z = coords->getZ()
-      - (-_width_z*_num_z/2.0 + _offset.getZ() + (lat_z + 0.5) * _width_z)
-      + getOffset()->getZ();
+      - (-_width_z*_num_z/2.0 + _offset.getZ() + (lat_z + 0.5) * _width_z);
 
   /* Check for 2D problem */
   if (_width_z == std::numeric_limits<double>::infinity())

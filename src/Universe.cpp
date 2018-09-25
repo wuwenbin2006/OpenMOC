@@ -1472,6 +1472,10 @@ void Lattice::removeUniverse(Universe* universe) {
 
 
 /**
+ * FIXEDME when non-uniform lattice is implenmented, a unique universe would 
+ have different widths, then the max_radius would not be the same. Then the 
+ ringify style would be different, thus universes with the same box-size are of 
+ a kind. Actually only the outer most cell of a universe should be cloned.
  * @brief Subdivides all of the Material-filled Cells within this Lattice
  *        into rings and angular sectors aligned with the z-axis.
  * @param max_radius the maximum allowable radius used in the subdivisions
@@ -1522,12 +1526,12 @@ void Lattice::buildNeighbors() {
 bool Lattice::withinBounds(Point* point) {
 
   /* Computes the Lattice bounds */
-  double bound_x_max = _offset.getX() + _num_x/2.0 * _width_x;
-  double bound_x_min = _offset.getX() - _num_x/2.0 * _width_x;
-  double bound_y_max = _offset.getY() + _num_y/2.0 * _width_y;
-  double bound_y_min = _offset.getY() - _num_y/2.0 * _width_y;
-  double bound_z_max = _offset.getZ() + _num_z/2.0 * _width_z;
-  double bound_z_min = _offset.getZ() - _num_z/2.0 * _width_z;
+  double bound_x_max = getMaxX();
+  double bound_x_min = getMinX();
+  double bound_y_max = getMaxY();
+  double bound_y_min = getMinY();
+  double bound_z_max = getMaxZ();
+  double bound_z_min = getMinZ();
 
   double x = point->getX();
   double y = point->getY();
@@ -1556,7 +1560,8 @@ bool Lattice::withinBounds(Point* point) {
  * @details This method first find the Lattice cell, then searches the
  *          Universe inside that Lattice cell. If LocalCoords is outside
  *          the bounds of the Lattice, this method will return NULL.
- * @param coords the LocalCoords of interest
+ * @param coords the LocalCoords of interest. Coordinates of coords and  
+ *        lattice._offset share the same origin.
  * @return a pointer to the Cell this LocalCoord is in or NULL
  */
 Cell* Lattice::findCell(LocalCoords* coords) {
@@ -1578,11 +1583,11 @@ Cell* Lattice::findCell(LocalCoords* coords) {
 
   /* Compute local position of Point in the next level Universe */
   double next_x = coords->getX()
-      - (-_width_x*_num_x/2.0 + _offset.getX() + (lat_x + 0.5) * _width_x);
+                  - (getMinX() + _widths_x[lat_x]/2. + _accumulate_x[lat_x]);
   double next_y = coords->getY()
-      - (-_width_y*_num_y/2.0 + _offset.getY() + (lat_y + 0.5) * _width_y);
+                  - (getMinY() + _widths_y[lat_y]/2. + _accumulate_y[lat_y]);
   double next_z = coords->getZ()
-      - (-_width_z*_num_z/2.0 + _offset.getZ() + (lat_z + 0.5) * _width_z);
+                  - (getMinZ() + _widths_z[lat_z]/2. + _accumulate_z[lat_z]);
 
   /* Check for 2D problem */
   if (_width_z == std::numeric_limits<double>::infinity())

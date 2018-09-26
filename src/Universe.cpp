@@ -1248,7 +1248,7 @@ std::map<int, Universe*> Lattice::getAllUniverses() {
  */
 void Lattice::setNumX(int num_x) {
   _num_x = num_x;
-  if(_width_x > 0.0) {
+  if(!_non_uniform && _width_x > 0.0) {
     _accumulate_x.resize(_num_x+1,0.0);
     _widths_x.resize(_num_x,_width_x);
     for(int i=0; i<_num_x+1; i++)
@@ -1263,7 +1263,7 @@ void Lattice::setNumX(int num_x) {
  */
 void Lattice::setNumY(int num_y) {
   _num_y = num_y;
-  if(_width_y > 0.0) {
+  if(!_non_uniform && _width_y > 0.0) {
     _accumulate_y.resize(_num_y+1,0.0);
     _widths_y.resize(_num_y,_width_y);
     for(int i=0; i<_num_y+1; i++)
@@ -1278,7 +1278,7 @@ void Lattice::setNumY(int num_y) {
  */
 void Lattice::setNumZ(int num_z) {
   _num_z = num_z;
-  if(_width_z > 0.0) {
+  if(!_non_uniform && _width_z > 0.0) {
     _accumulate_z.resize(_num_z+1,0.0);
     _widths_z.resize(_num_z,_width_z);
     for(int i=0; i<_num_z+1; i++)
@@ -1362,9 +1362,11 @@ void Lattice::setUniverses(int num_z, int num_y, int num_x,
   _universes.clear();
 
   /* Set the Lattice dimensions */
+  if(!_non_uniform){
   setNumX(num_x);
   setNumY(num_y);
   setNumZ(num_z);
+  }
 
   Universe* universe;
 
@@ -2062,6 +2064,10 @@ void Lattice::setWidths(std::vector<double> widths_x,
   _widths_x = widths_x;
   _widths_y = widths_y;
   _widths_z = widths_z;
+  
+  _num_x = _widths_x.size();
+  _num_y = _widths_y.size();
+  _num_z = _widths_z.size();
   
   _accumulate_x.resize(_num_x+1,0.0);
   _accumulate_y.resize(_num_y+1,0.0);

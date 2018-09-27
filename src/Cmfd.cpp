@@ -3314,8 +3314,9 @@ void Cmfd::initializeLattice(Point* offset) {
   for(int i=0; i<_num_z; i++)
     _accumulate_z[i+1] = _accumulate_z[i] + _cell_widths_z[i];
   
-  if(_width_x != _accumulate_x[_num_x] || _width_y != _accumulate_y[_num_y] ||
-     _width_z != _accumulate_z[_num_z])
+  if(fabs(_width_x - _accumulate_x[_num_x]) > FLT_EPSILON ||
+     fabs(_width_y - _accumulate_y[_num_y]) > FLT_EPSILON ||
+     fabs(_width_z - _accumulate_z[_num_z]) > FLT_EPSILON)
     log_printf(ERROR, "The sum of non-uniform mesh widths are not consistent "
           "with geometry dimensions. width_x = %f, width_y = %f, width_z = %f," 
           "sum_x = %f, sum_y = %f, sum_z = %f", _width_x, _width_y, _width_z, 

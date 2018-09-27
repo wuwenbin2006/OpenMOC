@@ -2069,12 +2069,18 @@ void Lattice::setWidths(std::vector<double> widths_x,
  *        accumulate variavles.
  */
 void Lattice::computeSizes(){
-  
-  if(!_non_uniform) {
+  if(_non_uniform) {
+    if(_widths_x.size() != _num_x || _widths_y.size() != _num_y ||
+        _widths_z.size() != _num_z)
+      log_printf(ERROR,"The sizes of non-uniform mesh widths are not consistent"
+                 " with the sizes of filling Universes into Lattice");
+  }
+  else {
     _widths_x.resize(_num_x, _width_x);
     _widths_y.resize(_num_y, _width_y);
     _widths_z.resize(_num_z, _width_z);
   }
+
   
   _accumulate_x.resize(_num_x+1,0.0);
   _accumulate_y.resize(_num_y+1,0.0);

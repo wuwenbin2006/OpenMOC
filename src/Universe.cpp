@@ -1549,7 +1549,8 @@ Cell* Lattice::findCell(LocalCoords* coords) {
     return NULL;
   }
 
-  /* Compute local position of Point in the next level Universe */
+  /* Compute local position of Point in the next level Universe. The offset of 
+     Lattice should be considered. */
   double next_x = coords->getX()
                   - (getMinX() + _widths_x[lat_x]/2. + _accumulate_x[lat_x]);
   double next_y = coords->getY()

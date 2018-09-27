@@ -2816,6 +2816,8 @@ double Cmfd::getDistanceToCentroid(Point* centroid, int cell_id,
   double centroid_x = centroid->getX();
   double centroid_y = centroid->getY();
   
+  /* The center of geometry is not always at (0,0,0), then relative coordinates
+     should be used. */
   double dx = centroid_x - _lattice->getMinX();
   double dy = centroid_y - _lattice->getMinY();
 

@@ -2049,7 +2049,18 @@ int Lattice::getLatticeSurfaceOTF(int cell, double z, int surface_2D) {
     return NUM_SURFACES * cell + surface_2D % NUM_SURFACES;
 }
 
-
+/**
+ * @brief Set width of non-uniform meshes in x y z directions.
+ * @details An example of how this may be called from Python illustrated below:
+ *
+ * @code
+ *          Lattice::setWidths([1,2,3], [4,5,6,7], [3.3,2.4])
+ * @endcode
+ *
+ * @param widths_x x-direction widths of non-uniform meshes
+ * @param widths_y y-direction widths of non-uniform meshes
+ * @param widths_z z-direction widths of non-uniform meshes
+ */
 void Lattice::setWidths(std::vector<double> widths_x, 
                   std::vector<double> widths_y, std::vector<double> widths_z) {
   _non_uniform = true;
@@ -2058,6 +2069,10 @@ void Lattice::setWidths(std::vector<double> widths_x,
   _widths_z = widths_z;
 }
 
+/**
+ * @brief Set _widths_x, _widths_y, _widths_z for uniform case, compute 
+ *        accumulate variavles.
+ */
 void Lattice::computeSizes(){
   
   if(!_non_uniform) {
@@ -2078,7 +2093,6 @@ void Lattice::computeSizes(){
   
   for(int i=0; i<_num_z; i++)
     _accumulate_z[i+1] = _accumulate_z[i] + _widths_z[i];  
-  
 }
 
 void Lattice::printSizes() {

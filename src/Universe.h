@@ -171,16 +171,22 @@ private:
   
   /** The width of each Lattice cell (cm) along the x-axis */
   double _width_x;
+  
+  /** x-direction dimensions of non-uniform lattice meshes */
   std::vector<double> _widths_x;
   std::vector<double> _accumulate_x;
 
   /** The width of each Lattice cell (cm) along the y-axis */
   double _width_y;
+  
+  /** y-direction dimensions of non-uniform lattice meshes */
   std::vector<double> _widths_y;
   std::vector<double> _accumulate_y;
 
   /** The width of each Lattice cell (cm) along the z-axis */
   double _width_z;
+  
+  /** z-direction dimensions of non-uniform lattice meshes */
   std::vector<double> _widths_z;
   std::vector<double> _accumulate_z;
 
@@ -244,9 +250,12 @@ public:
   std::string toString();
   void printString();
   
+  /* Set XYZ widths of non-uniform meshes */
   void setWidths(std::vector<double> widths_x, std::vector<double> widths_y, 
                  std::vector<double> widths_z);
   void computeSizes();
+  
+  /* For debug use */
   void printSizes();
   
 };

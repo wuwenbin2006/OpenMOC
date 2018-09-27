@@ -467,6 +467,7 @@ public:
   void setFluxMoments(FP_PRECISION* flux_moments);
   
   void setWidths(std::vector< std::vector<double> > widths);
+  void printSizes();
 };
 
 

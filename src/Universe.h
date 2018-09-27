@@ -246,6 +246,8 @@ public:
   
   void setWidths(std::vector<double> widths_x, std::vector<double> widths_y, 
                  std::vector<double> widths_z);
+  void computeSizes();
+  void printSizes();
   
 };
 

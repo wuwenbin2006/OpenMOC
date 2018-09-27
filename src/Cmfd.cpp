@@ -3269,7 +3269,7 @@ void Cmfd::initialize() {
 
 
 /**
- * @brief Initialize the CMFD lattice.
+ * @brief Initialize the CMFD lattice and compute mesh dimenssions.
  */
 void Cmfd::initializeLattice(Point* offset) {
 
@@ -3301,8 +3301,13 @@ void Cmfd::initializeLattice(Point* offset) {
   for(int i=0; i<_num_z; i++)
     _accumulate_z[i+1] = _accumulate_z[i] + _cell_widths_z[i];
   
+  if(_width_x != _accumulate_x[_num_x] || _width_y != _accumulate_y[_num_y] ||
+     _width_z != _accumulate_z[_num_z])
+    log_printf(ERROR, "The sum of non-uniform mesh widths are not consistent "
+          "with geometry dimensions. width_x = %f, width_y = %f, width_z = %f," 
+          "sum_x = %f, sum_y = %f, sum_z = %f", _width_x, _width_y, _width_z, 
+          _accumulate_x[_num_x], _accumulate_y[_num_y], _accumulate_z[_num_z]);
 
-  
   /* Delete old lattice if it exists */
   if (_lattice != NULL)
     delete _lattice;
@@ -4790,8 +4795,20 @@ void Cmfd::recordNetCurrents() {
   }
 }
 
-
+/**
+ * @brief Set width of non-uniform meshes in x y z directions.
+ * @details An example of how this may be called from Python illustrated below:
+ *
+ * @code
+ *          cmfd.setWidths([[1,2,3], [4,5,6,7], [3.3,2.4]])
+ * @endcode
+ *
+ * @param widths A vector of 3 vectors for the x y z sizes of non-uniform meshes
+ */
 void Cmfd::setWidths(std::vector< std::vector<double> > widths) {
+  
+  if(widths.size() != 3) 
+    log_printf(ERROR, "Widths of THREE directions must be provided");
   
   _non_uniform = true;
   _cell_widths_x = widths[0];
@@ -4799,6 +4816,9 @@ void Cmfd::setWidths(std::vector< std::vector<double> > widths) {
   _cell_widths_z = widths[2]; 
 }
 
+/**
+ * @brief For debug use.
+ */
 void Cmfd::printSizes() {
   int i;
   printf("non_uniform=%d, \nNum_XYZ: %2d, %2d, %2d\n", _non_uniform,

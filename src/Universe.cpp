@@ -1275,12 +1275,6 @@ std::map<int, Universe*> Lattice::getAllUniverses() {
  */
 void Lattice::setNumX(int num_x) {
   _num_x = num_x;
-  /*if(!_non_uniform && _width_x > 0.0) {
-    _accumulate_x.resize(_num_x+1,0.0);
-    _widths_x.resize(_num_x,_width_x);
-    for(int i=0; i<_num_x+1; i++)
-      _accumulate_x[i] = i * _width_x;
-  }*/
 }
 
 
@@ -1290,12 +1284,6 @@ void Lattice::setNumX(int num_x) {
  */
 void Lattice::setNumY(int num_y) {
   _num_y = num_y;
-  /*if(!_non_uniform && _width_y > 0.0) {
-    _accumulate_y.resize(_num_y+1,0.0);
-    _widths_y.resize(_num_y,_width_y);
-    for(int i=0; i<_num_y+1; i++)
-      _accumulate_y[i] = i * _width_y;
-    }*/
 }
 
 
@@ -1305,12 +1293,6 @@ void Lattice::setNumY(int num_y) {
  */
 void Lattice::setNumZ(int num_z) {
   _num_z = num_z;
-  /*if(!_non_uniform && _width_z > 0.0) {
-    _accumulate_z.resize(_num_z+1,0.0);
-    _widths_z.resize(_num_z,_width_z);
-    for(int i=0; i<_num_z+1; i++)
-      _accumulate_z[i] = i * _width_z;
-  }*/
 }
 
 
@@ -1330,21 +1312,6 @@ void Lattice::setWidth(double width_x, double width_y, double width_z) {
   _width_x = width_x;
   _width_y = width_y;
   _width_z = width_z;
-  /*if(_num_x >0 && _num_y > 0 && _num_z > 0) {
-    _accumulate_x.resize(_num_x+1,0.0);
-    _accumulate_y.resize(_num_y+1,0.0);
-    _accumulate_z.resize(_num_z+1,0.0);
-    _widths_x.resize(_num_x,_width_x);
-    _widths_y.resize(_num_y,_width_y);
-    _widths_z.resize(_num_z,_width_z);
-    
-    for(int i=0; i<_num_x+1; i++)
-      _accumulate_x[i] = i * _width_x;
-    for(int i=0; i<_num_y+1; i++)
-      _accumulate_y[i] = i * _width_y;
-    for(int i=0; i<_num_z+1; i++)
-      _accumulate_z[i] = i * _width_z;
-  }*/
 }
 
 
@@ -1389,11 +1356,9 @@ void Lattice::setUniverses(int num_z, int num_y, int num_x,
   _universes.clear();
 
   /* Set the Lattice dimensions */
-  //if(!_non_uniform){
   setNumX(num_x);
   setNumY(num_y);
   setNumZ(num_z);
-  //}
 
   Universe* universe;
 
@@ -2091,25 +2056,6 @@ void Lattice::setWidths(std::vector<double> widths_x,
   _widths_x = widths_x;
   _widths_y = widths_y;
   _widths_z = widths_z;
-  
-  /*
-  _num_x = _widths_x.size();
-  _num_y = _widths_y.size();
-  _num_z = _widths_z.size();
-  
-  _accumulate_x.resize(_num_x+1,0.0);
-  _accumulate_y.resize(_num_y+1,0.0);
-  _accumulate_z.resize(_num_z+1,0.0);
-  
-  for(int i=0; i<_num_x; i++)
-    _accumulate_x[i+1] = _accumulate_x[i] + _widths_x[i];
-    
-  for(int i=0; i<_num_y; i++)
-    _accumulate_y[i+1] = _accumulate_y[i] + _widths_y[i];  
-  
-  for(int i=0; i<_num_z; i++)
-    _accumulate_z[i+1] = _accumulate_z[i] + _widths_z[i];  
-    */
 }
 
 void Lattice::computeSizes(){
@@ -2137,10 +2083,9 @@ void Lattice::computeSizes(){
 
 void Lattice::printSizes() {
   int i;
-  printf("non_uniform=%d, \nNum_XYZ: %2d, %2d, %2d\n", _non_uniform, _num_x, _num_y, _num_z);
-  //printf("Num_Local_XYZ: %2d, %2d, %2d\n", _local_num_x, _local_num_y, _local_num_z);
+  printf("non_uniform=%d, \nNum_XYZ: %2d, %2d, %2d\n", _non_uniform, 
+         _num_x, _num_y, _num_z);
   printf("offset: %f, %f, %f\n", _offset.getX(),_offset.getY(),_offset.getZ());
-  //printf("width_XYZ: %f, %f, %f\n", _width_x,_width_y,_width_z);
   printf("cell_width_XYZ: %f, %f, %f\n", _width_x,_width_y,_width_z);
   printf("cell_widths_XYZ:\n");
   for(i=0; i<_num_x; i++)
@@ -2163,7 +2108,5 @@ void Lattice::printSizes() {
   for(i=0; i<_num_z+1; i++)
     printf("i=%d, %f; ",i, _accumulate_z[i]);
   printf("\n");
-
-
 }
 

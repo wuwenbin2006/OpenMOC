@@ -265,16 +265,6 @@ void Cmfd::setNumX(int num_x) {
   _local_num_x = _num_x;
   if (_domain_communicator != NULL)
     _local_num_x = _num_x / _domain_communicator->_num_domains_x;
-  //if (_width_x != 0.) {
-  //  _cell_width_x = _width_x / _num_x;
-  /*  if(!_non_uniform) {
-      _accumulate_x.resize(_num_x+1,0.0);
-      _cell_widths_x.resize(_num_x,_cell_width_x);
-      
-      for(int i=0; i<_num_x+1; i++)
-        _accumulate_x[i] = i * _cell_width_x;
-    }
-  }*/
 }
 
 
@@ -292,16 +282,6 @@ void Cmfd::setNumY(int num_y) {
   _local_num_y = _num_y;
   if (_domain_communicator != NULL)
     _local_num_y = _num_y / _domain_communicator->_num_domains_y;
-  //if (_width_y != 0.) {
-  //  _cell_width_y = _width_y / _num_y;
-    /*if(!_non_uniform) {
-      _accumulate_y.resize(_num_y+1,0.0);
-      _cell_widths_y.resize(_num_y,_cell_width_y);
-      
-      for(int i=0; i<_num_y+1; i++)
-        _accumulate_y[i] = i * _cell_width_y;
-    }
-  }*/
 }
 
 
@@ -319,26 +299,9 @@ void Cmfd::setNumZ(int num_z) {
   _local_num_z = _num_z;
   if (_domain_communicator != NULL)
     _local_num_z = _num_z / _domain_communicator->_num_domains_z;
-  //if (_width_z != 0.) {
-  //  _cell_width_z = _width_z / _num_z;
-    /*if(!_non_uniform) {
-    _accumulate_z.resize(_num_z+1,0.0);
-    _cell_widths_z.resize(_num_z,_cell_width_z);
-    
-    for(int i=0; i<_num_z+1; i++)
-      _accumulate_z[i] = i * _cell_width_z;
-    }
-  }*/
 
   if (_width_z == std::numeric_limits<double>::infinity()) {
     _cell_width_z = 1.0;
-    /*if(!_non_uniform) {
-      _accumulate_z.resize(_num_z+1,0.0);
-      _cell_widths_z.resize(_num_z,_cell_width_z);
-      
-      for(int i=0; i<_num_z+1; i++)
-        _accumulate_z[i] = i * _cell_width_z;
-      }*/
   }
 }
 
@@ -394,16 +357,6 @@ CMFD_PRECISION*** Cmfd::getBoundarySurfaceCurrents() {
  */
 void Cmfd::setWidthX(double width) {
   _width_x = width;
-  //if (!_non_uniform && _num_x != 0) {
-  //  _cell_width_x = _width_x / _num_x;
-    /*if(!_non_uniform) {
-      _accumulate_x.resize(_num_x+1,0.0);
-      _cell_widths_x.resize(_num_x,_cell_width_x);
-      
-      for(int i=0; i<_num_x+1; i++)
-        _accumulate_x[i] = i * _cell_width_x;
-      }
-  }*/
 }
 
 
@@ -413,16 +366,6 @@ void Cmfd::setWidthX(double width) {
  */
 void Cmfd::setWidthY(double width) {
   _width_y = width;
-  //if (!_non_uniform && _num_y != 0) {
-  //  _cell_width_y = _width_y / _num_y;
-    /*if(!_non_uniform) {
-      _accumulate_y.resize(_num_y+1,0.0);
-      _cell_widths_y.resize(_num_y,_cell_width_y);
-      
-      for(int i=0; i<_num_y+1; i++)
-        _accumulate_y[i] = i * _cell_width_y;
-      }
-  }*/
 }
 
 
@@ -432,16 +375,6 @@ void Cmfd::setWidthY(double width) {
  */
 void Cmfd::setWidthZ(double width) {
   _width_z = width;
-  //if (!_non_uniform && _num_z != 0) {
-  //  _cell_width_z = _width_z / _num_z;
-    /*if(!_non_uniform) {
-      _accumulate_z.resize(_num_z+1,0.0);
-      _cell_widths_z.resize(_num_z,_cell_width_z);
-      
-      for(int i=0; i<_num_z+1; i++)
-        _accumulate_z[i] = i * _cell_width_z;
-      }
-  }*/
 }
 
 
@@ -4861,34 +4794,20 @@ void Cmfd::recordNetCurrents() {
 void Cmfd::setWidths(std::vector< std::vector<double> > widths) {
   
   _non_uniform = true;
-  //setNumX(widths[0].size());
-  //setNumY(widths[1].size());
-  //setNumZ(widths[2].size());
   _cell_widths_x = widths[0];
   _cell_widths_y = widths[1];
   _cell_widths_z = widths[2]; 
-
-  /*_accumulate_x.resize(_num_x+1,0.0);
-  _accumulate_y.resize(_num_y+1,0.0);
-  _accumulate_z.resize(_num_z+1,0.0);
-  
-  for(int i=0; i<_num_x; i++)
-    _accumulate_x[i+1] = _accumulate_x[i] + _cell_widths_x[i];
-  
-  for(int i=0; i<_num_y; i++)
-    _accumulate_y[i+1] = _accumulate_y[i] + _cell_widths_y[i];  
-  
-  for(int i=0; i<_num_z; i++)
-    _accumulate_z[i+1] = _accumulate_z[i] + _cell_widths_z[i];  */
 }
 
 void Cmfd::printSizes() {
   int i;
-  printf("non_uniform=%d, \nNum_XYZ: %2d, %2d, %2d\n", _non_uniform, _num_x, _num_y, _num_z);
-  printf("Num_Local_XYZ: %2d, %2d, %2d\n", _local_num_x, _local_num_y, _local_num_z);
-  //printf("offset: %f, %f, %f\n", _off
+  printf("non_uniform=%d, \nNum_XYZ: %2d, %2d, %2d\n", _non_uniform,
+         _num_x, _num_y, _num_z);
+  printf("Num_Local_XYZ: %2d, %2d, %2d\n", _local_num_x, 
+         _local_num_y, _local_num_z);
   printf("width_XYZ: %f, %f, %f\n", _width_x,_width_y,_width_z);
-  printf("cell_width_XYZ: %f, %f, %f\n", _cell_width_x,_cell_width_y,_cell_width_z);
+  printf("cell_width_XYZ: %f, %f, %f\n", _cell_width_x,
+         _cell_width_y,_cell_width_z);
   printf("cell_widths_XYZ:\n");
   for(i=0; i<_num_x; i++)
     printf("i=%d, %f; ",i, _cell_widths_x[i]);
@@ -4910,14 +4829,4 @@ void Cmfd::printSizes() {
   for(i=0; i<_num_z+1; i++)
     printf("i=%d, %f; ",i, _accumulate_z[i]);
   printf("\n");
-  
 }
-
-
-
-
-
-
-
-
-

@@ -2981,9 +2981,6 @@ void Geometry::initializeCmfd() {
   _cmfd->setWidthY(max_y - min_y);
   _cmfd->setWidthZ(max_z - min_z);
 
-  /* Intialize CMFD Maps */
-  _cmfd->initializeCellMap();
-
   /* Initialize the CMFD lattice */
   Point offset;
   offset.setX(min_x + (max_x - min_x)/2.0);
@@ -2991,6 +2988,10 @@ void Geometry::initializeCmfd() {
   offset.setZ(min_z + (max_z - min_z)/2.0);
 
   _cmfd->initializeLattice(&offset);
+  
+  /* Intialize CMFD Maps */
+  _cmfd->initializeCellMap();
+  
   _cmfd->setGeometry(this);
 
 #ifdef MPIx

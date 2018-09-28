@@ -1838,7 +1838,8 @@ void Geometry::segmentize2D(Track* track, double z_coord) {
     curr = findNextCell(&end, phi);
 
     /* Checks that segment does not have the same start and end Points */
-    if (start.getX() == end.getX() && start.getY() == end.getY())
+    if (fabs(start.getX() - end.getX()) < FLT_EPSILON
+        && fabs(start.getY() - end.getY()) < FLT_EPSILON)
       log_printf(ERROR, "Created segment with same start and end "
                  "point: x = %f, y = %f", start.getX(), start.getY());
 
@@ -1998,10 +1999,9 @@ void Geometry::segmentize3D(Track3D* track, bool setup) {
 
     /* Checks to make sure that new Segment does not have the same start
      * and end Points */
-    if (start.getX() == end.getX() &&
-        start.getY() == end.getY() &&
-        start.getZ() == end.getZ()) {
-
+    if (fabs(start.getX() - end.getX()) < FLT_EPSILON &&
+        fabs(start.getY() - end.getY()) < FLT_EPSILON &&
+        fabs(start.getZ() - end.getZ()) < FLT_EPSILON) {
       log_printf(ERROR, "Created a Track3D segment with the same start and end "
                  "point: x = %f, y = %f, z = %f", start.getX(),
                  start.getY(), start.getZ());
@@ -2198,7 +2198,8 @@ void Geometry::segmentizeExtruded(Track* flattened_track,
       curr = findNextCell(&end, phi);
 
       /* Checks that segment does not have the same start and end Points */
-      if (start.getX() == end.getX() && start.getY() == end.getY())
+      if (fabs(start.getX() - end.getX()) < FLT_EPSILON && 
+          fabs(start.getY() - end.getY()) < FLT_EPSILON)
         log_printf(ERROR, "Created segment with same start and end "
                    "point: x = %f, y = %f", start.getX(), start.getY());
 
@@ -2985,6 +2986,23 @@ void Geometry::initializeCmfd() {
 
 #ifdef MPIx
   if (_domain_decomposed) {
+
+    /* Check that CMFD mesh is compatible with domain decomposition */
+    if (_cmfd != NULL) {
+      if (_cmfd->getNumX() % _num_domains_x != 0)
+        log_printf(ERROR, "CMFD mesh is incompatible with domain decomposition"
+                   " in the X direction, make sure the mesh aligns with domain"
+                   " boundaries");
+      if (_cmfd->getNumY() % _num_domains_z != 0)
+        log_printf(ERROR, "CMFD mesh is incompatible with domain decomposition"
+                   " in the Y direction, make sure the mesh aligns with domain"
+                   " boundaries");
+      if (_cmfd->getNumZ() % _num_domains_z != 0)
+        log_printf(ERROR, "CMFD mesh is incompatible with domain decomposition"
+                   " in the Z direction, make sure the mesh aligns with domain"
+                   " boundaries");
+    }
+
     _cmfd->setNumDomains(_num_domains_x, _num_domains_y, _num_domains_z);
     _cmfd->setDomainIndexes(_domain_index_x, _domain_index_y, _domain_index_z);
   }
@@ -3314,10 +3332,10 @@ std::vector<double> Geometry::getUniqueZHeights(bool include_overlaid_mesh) {
             double D = plane->getD();
 
             /* Check if there is a z-component */
-            if (C != 0) {
+            if (fabs(C) > FLT_EPSILON) {
 
               /* Check if plane has a continuous varying slope */
-              if (A != 0 || B != 0)
+              if (fabs(A) > FLT_EPSILON || fabs(B) > FLT_EPSILON)
                 log_printf(ERROR, "Continuous axial variation found in the "
                           "Geometry during axial on-the-fly ray tracing. "
                           "Axial on-the-fly ray tracing only supports "

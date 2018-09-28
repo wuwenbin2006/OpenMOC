@@ -380,7 +380,7 @@ int Matrix::getNNZ() {
   std::map<int, CMFD_PRECISION>::iterator iter;
   for (int row=0; row < _num_rows; row++) {
     for (iter = _LIL[row].begin(); iter != _LIL[row].end(); ++iter) {
-      if (iter->second != 0.0)
+      if (fabs(iter->second) > FLT_EPSILON)
         NNZ++;
     }
   }

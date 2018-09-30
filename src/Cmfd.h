@@ -299,6 +299,15 @@ private:
 
   /* The number of on-domain cells in the z-direction */
   int _local_num_z;
+  
+  std::vector<int> _accumulate_lmx;
+  std::vector<int> _accumulate_lmy;
+  std::vector<int> _accumulate_lmz;
+  
+  //for substitution of _local_num_x, _local_num_y, _local_num_y, checking the 
+  //code is completely and fully changed to non-uniform version. Cuz 
+  //_local_num_x, _local_num_y, _local_num_y is used too much in the code.
+  int _local_num_xn, _local_num_yn, _local_num_zn;
 
   /* Size of _tally_memory array */
   long _total_tally_size;

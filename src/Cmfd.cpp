@@ -395,7 +395,60 @@ void Cmfd::setNumDomains(int num_x, int num_y, int num_z) {
   _domain_communicator->_num_domains_x = num_x;
   _domain_communicator->_num_domains_y = num_y;
   _domain_communicator->_num_domains_z = num_z;
+  
+  _accumulate_lmx.resize(num_x + 1, 0);
+  _accumulate_lmy.resize(num_y + 1, 0);
+  _accumulate_lmz.resize(num_z + 1, 0);
+  
+  /* To check the position of domain decomposition interfaces in non-uniform CMFD
+    mesh interfaces*/
+  for(int i=0; i<num_x; i++) {
+    double coord = (i + 1) * _width_x / num_x;
+    for(int j=1; j<_num_x+1; j++) {
+      if(fabs(coord - _accumulate_x[j]) < FLT_EPSILON) {
+        _accumulate_lmx[i+1] = j;
+        break;
+      }
+    }
+    if(j == _num_x+1) {
+      log_printf(ERROR, "The domain decomposition interface x[%d] = %f is NOT "
+                 "among the CMFD mesh division in the x direction", i, coord);
+    }
+  }
 
+  /* To check the position of domain decomposition interfaces in non-uniform CMFD
+    mesh interfaces*/
+  for(int i=0; i<num_y; i++) {
+    double coord = (i + 1) * _width_y / num_y;
+    for(int j=1; j<_num_y+1; j++) {
+      if(fabs(coord - _accumulate_y[j]) < FLT_EPSILON) {
+        _accumulate_lmy[i+1] = j;
+        break;
+      }
+    }
+    if(j == _num_y+1) {
+      log_printf(ERROR, "The domain decomposition interface y[%d] = %f is NOT "
+                 "among the CMFD mesh division in the y direction", i, coord);
+    }
+  }
+
+  /* To check the position of domain decomposition interfaces in non-uniform CMFD
+    mesh interfaces*/
+  for(int i=0; i<num_z; i++) {
+    double coord = (i + 1) * _width_z / num_z;
+    for(int j=1; j<_num_z+1; j++) {
+      if(fabs(coord - _accumulate_z[j]) < FLT_EPSILON) {
+        _accumulate_lmz[i+1] = j;
+        break;
+      }
+    }
+    if(j == _num_z+1) {
+      log_printf(ERROR, "The domain decomposition interface z[%d] = %f is NOT "
+                 "among the CMFD mesh division in the z direction", i, coord);
+    }
+  }
+
+//The next three sentences would be deleted when done.
   _local_num_x = _num_x / num_x;
   _local_num_y = _num_y / num_y;
   _local_num_z = _num_z / num_z;
@@ -415,6 +468,10 @@ void Cmfd::setDomainIndexes(int idx_x, int idx_y, int idx_z) {
   _domain_communicator->_domain_idx_x = idx_x;
   _domain_communicator->_domain_idx_y = idx_y;
   _domain_communicator->_domain_idx_z = idx_z;
+  
+  _local_num_xn = _accumulate_lmx[idx_x + 1] - _accumulate_lmx[idx_x];
+  _local_num_yn = _accumulate_lmy[idx_y + 1] - _accumulate_lmy[idx_y];
+  _local_num_zn = _accumulate_lmz[idx_z + 1] - _accumulate_lmz[idx_z];
 }
 #endif
 
@@ -3045,7 +3102,7 @@ void Cmfd::initialize() {
     /* Initialize domain communicator */
     if (_domain_communicator != NULL) {
       /* Size of domain in each direction */
-      _local_num_x = _num_x / _domain_communicator->_num_domains_x;
+      _local_num_x = _num_x / _domain_communicator->_num_domains_x;//_local_num_x need to be replaced.
       _local_num_y = _num_y / _domain_communicator->_num_domains_y;
       _local_num_z = _num_z / _domain_communicator->_num_domains_z;
       _domain_communicator->stop = false;

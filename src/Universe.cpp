@@ -1079,6 +1079,33 @@ double Lattice::getWidthZ() const {
   return _width_z;
 }
 
+bool Lattice::getNonUniform() const {
+  return _non_uniform;
+}
+
+const double* Lattice::getWidthsX() const {
+  return &_widths_x[0];
+}
+
+const double* Lattice::getWidthsY() const {
+  return &_widths_y[0];
+}
+
+const double* Lattice::getWidthsZ() const {
+  return &_widths_z[0];
+}
+
+const double* Lattice::getAccumulateX() const {
+  return &_accumulate_x[0];
+}
+
+const double* Lattice::getAccumulateY() const {
+  return &_accumulate_y[0];
+}
+
+const double* Lattice::getAccumulateZ() const {
+  return &_accumulate_z[0];
+}
 
 /**
  * @brief Returns the minimum reachable x-coordinate in the Lattice.
@@ -1286,6 +1313,20 @@ void Lattice::setWidth(double width_x, double width_y, double width_z) {
   _width_z = width_z;
 }
 
+void Lattice::setNonUniform(bool non_uniform) {
+  _non_uniform = non_uniform;
+}
+
+void Lattice::setWidthsX(std::vector<double> widthsx) {
+  _widths_x = widthsx;
+}
+
+void Lattice::setWidthsY(std::vector<double> widthsy) {
+  _widths_y = widthsy;
+}
+void Lattice::setWidthsZ(std::vector<double> widthsz) {
+  _widths_z = widthsz;
+}
 
 /**
  * @brief Sets the array of Universe pointers filling each Lattice cell.

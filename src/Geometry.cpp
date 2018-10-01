@@ -3731,9 +3731,9 @@ void Geometry::dumpToFile(std::string filename) {
       double width_z = lattice->getWidthZ();
       double* offset = lattice->getOffset()->getXYZ();
       bool non_uniform = lattice->getNonUniform();
-      const double *widths_x = lattice->getWidthsX();
-      const double *widths_y = lattice->getWidthsY();
-      const double *widths_z = lattice->getWidthsZ();
+      const std::vector<double> widths_x = lattice->getWidthsX();
+      const std::vector<double> widths_y = lattice->getWidthsY();
+      const std::vector<double> widths_z = lattice->getWidthsZ();
       fwrite(&num_x, sizeof(int), 1, out);
       fwrite(&num_y, sizeof(int), 1, out);
       fwrite(&num_z, sizeof(int), 1, out);
@@ -3742,9 +3742,9 @@ void Geometry::dumpToFile(std::string filename) {
       fwrite(&width_z, sizeof(double), 1, out);
       fwrite(offset, sizeof(double), 3, out);
       fwrite(&non_uniform, sizeof(bool), 1, out);
-      fwrite(widths_x, sizeof(double), num_x, out);
-      fwrite(widths_y, sizeof(double), num_y, out);
-      fwrite(widths_z, sizeof(double), num_z, out);
+      fwrite(&widths_x[0], sizeof(double), num_x, out);
+      fwrite(&widths_y[0], sizeof(double), num_y, out);
+      fwrite(&widths_z[0], sizeof(double), num_z, out);
 
       /* Get universes */
       Universe* universes[num_x * num_y * num_z];
@@ -4008,7 +4008,7 @@ void Geometry::loadFromFile(std::string filename, bool twiddle) {
     ret = twiddleRead(&has_parent, sizeof(bool), 1, in);
     if (has_parent) {
       int parent_id;
-      ret = twiddleRead(&parent_id, sizeof(bool), 1, in);
+      ret = twiddleRead(&parent_id, sizeof(int), 1, in);
       cell_parent[key] = parent_id;
     }
 
@@ -4074,8 +4074,6 @@ void Geometry::loadFromFile(std::string filename, bool twiddle) {
       int num_x, num_y, num_z;
       double width_x, width_y, width_z;
       double offset[3];
-      bool non_uniform;
-      vector
       ret = twiddleRead(&num_x, sizeof(int), 1, in);
       ret = twiddleRead(&num_y, sizeof(int), 1, in);
       ret = twiddleRead(&num_z, sizeof(int), 1, in);
@@ -4083,16 +4081,44 @@ void Geometry::loadFromFile(std::string filename, bool twiddle) {
       ret = twiddleRead(&width_y, sizeof(double), 1, in);
       ret = twiddleRead(&width_z, sizeof(double), 1, in);
       ret = twiddleRead(offset, sizeof(double), 3, in);
-      ret = twiddleRead(
-
+      
+      bool non_uniform;
+      std::vector<double> widths_x(num_x), widths_y(num_y), widths_z(num_z);
+      ret = twiddleRead(&non_uniform, sizeof(bool), 1, in);
+      ret = twiddleRead(&widths_x[0], sizeof(double), num_x, in);
+      ret = twiddleRead(&widths_y[0], sizeof(double), num_y, in);
+      ret = twiddleRead(&widths_z[0], sizeof(double), num_z, in);
+      
+      std::vector<double> accum_x(num_x+1,0);
+      std::vector<double> accum_y(num_y+1,0);
+      std::vector<double> accum_z(num_z+1,0);
+      
+      for(int i=0; i<num_x; i++) 
+        accum_x[i+1] = accum_x[i] + widths_x[i];
+      for(int i=0; i<num_y; i++) 
+        accum_y[i+1] = accum_y[i] + widths_y[i];
+      for(int i=0; i<num_z; i++) 
+        accum_z[i+1] = accum_z[i] + widths_z[i];
+      
       /* Create lattice */
       Lattice* new_lattice = new Lattice(id, name);
       all_universes[key] = new_lattice;
       new_lattice->setNumX(num_x);
       new_lattice->setNumY(num_y);
       new_lattice->setNumZ(num_z);
-      new_lattice->setWidth(width_x, width_y, width_z);
+      if(non_uniform)
+        new_lattice->setWidth(1, 1, 1);
+      else
+        new_lattice->setWidth(width_x, width_y, width_z);
       new_lattice->setOffset(offset[0], offset[1], offset[2]);
+      
+      new_lattice->setNonUniform(non_uniform);
+      new_lattice->setWidthsX(widths_x);
+      new_lattice->setWidthsY(widths_y);
+      new_lattice->setWidthsZ(widths_z);
+      new_lattice->setAccumulateX(accum_x);
+      new_lattice->setAccumulateY(accum_y);
+      new_lattice->setAccumulateZ(accum_z);
 
       /* Get universes */
       lattice_universes[key] = new int[num_x*num_y*num_z];

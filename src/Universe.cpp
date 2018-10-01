@@ -1083,28 +1083,28 @@ bool Lattice::getNonUniform() const {
   return _non_uniform;
 }
 
-const double* Lattice::getWidthsX() const {
-  return &_widths_x[0];
+const std::vector<double>& Lattice::getWidthsX() const {
+  return _widths_x;
 }
 
-const double* Lattice::getWidthsY() const {
-  return &_widths_y[0];
+const std::vector<double>& Lattice::getWidthsY() const {
+  return _widths_y;
 }
 
-const double* Lattice::getWidthsZ() const {
-  return &_widths_z[0];
+const std::vector<double>& Lattice::getWidthsZ() const {
+  return _widths_z;
 }
 
-const double* Lattice::getAccumulateX() const {
-  return &_accumulate_x[0];
+const std::vector<double>& Lattice::getAccumulateX() const {
+  return _accumulate_x;
 }
 
-const double* Lattice::getAccumulateY() const {
-  return &_accumulate_y[0];
+const std::vector<double>& Lattice::getAccumulateY() const {
+  return _accumulate_y;
 }
 
-const double* Lattice::getAccumulateZ() const {
-  return &_accumulate_z[0];
+const std::vector<double>& Lattice::getAccumulateZ() const {
+  return _accumulate_z;
 }
 
 /**
@@ -1326,6 +1326,18 @@ void Lattice::setWidthsY(std::vector<double> widthsy) {
 }
 void Lattice::setWidthsZ(std::vector<double> widthsz) {
   _widths_z = widthsz;
+}
+
+void Lattice::setAccumulateX(std::vector<double> accumulatex) {
+  _accumulate_x = accumulatex;
+}
+
+void Lattice::setAccumulateY(std::vector<double> accumulatey) {
+  _accumulate_y = accumulatey;
+}
+
+void Lattice::setAccumulateZ(std::vector<double> accumulatez) {
+  _accumulate_z = accumulatez;
 }
 
 /**

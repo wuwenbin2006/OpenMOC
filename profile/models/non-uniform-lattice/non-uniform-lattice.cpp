@@ -19,7 +19,7 @@ int main(int argc,  char* argv[]) {
 
   /* Define simulation parameters */
   #ifdef OPENMP
-  int num_threads = 10;
+  int num_threads = 1;
   //omp_get_num_procs();
   #else
   int num_threads = 1;
@@ -31,24 +31,23 @@ int main(int argc,  char* argv[]) {
   int num_polar = 10; // 2
 
   double tolerance = 1e-5;
-  int max_iters = 1000; //FIXME: 27
+  int max_iters = 1000; //FIXME: 27 
   
   /* Create CMFD lattice */
   Cmfd* cmfd = new Cmfd();
   cmfd->useAxialInterpolation(false);
   //cmfd->setLatticeStructure(2, 2, 2);
-  std::vector<std::vector<double> > cmfd_widths{{0.05,1.26,1.26, 0.05},
+  /*std::vector<std::vector<double> > cmfd_widths{{0.05,0.1,0.2,0.3,0.4,0.26,1.26, 0.05},
+  	{0.05,0.1,0.2,0.3,0.4,0.26,1.26, 0.05},
+  	{1,0.25,1.25}};*/
+  	std::vector<std::vector<double> > cmfd_widths{{0.05,1.26,1.26, 0.05},
   	{0.05,1.26,1.26, 0.05},
-  	{1,1.5}};
+  	{1.25,1.25}};
   cmfd->setWidths(cmfd_widths);
-  cmfd->setCentroidUpdateOn(false);
-  //cmfd.setKNearest(1);
+  cmfd->setCentroidUpdateOn(false); 
 	std::vector<std::vector<int> > cmfd_group_structure{{1,2,3},{4,5},{6,7}};
   cmfd->setGroupStructure(cmfd_group_structure);
-//  cmfd.setCMFDRelaxationFactor(0.5);
-//  cmfd.setSORRelaxationFactor(1.6);
-//  cmfd.useFluxLimiting(true);
-  //cmfd.rebalanceSigmaT(true);
+
 
   /* Load the geometry */
   log_printf(NORMAL, "Creating geometry...");
@@ -57,7 +56,7 @@ int main(int argc,  char* argv[]) {
   
   geometry->setCmfd(cmfd); //FIXME OFF /ON
 #ifdef MPIx
-  geometry->setDomainDecomposition(1, 1, 1, MPI_COMM_WORLD);
+  geometry->setDomainDecomposition(2, 2, 2, MPI_COMM_WORLD);
 #endif
   geometry->initializeFlatSourceRegions();
 

@@ -237,7 +237,7 @@ program = $(case:.cpp=)
 
 default: folder $(addsuffix .o, $(program)) $(program)
 
-$(programs): $(obj)  $(headers)
+$(programs): $(obj)  $(headers) $(addsuffix .o, $(program))
 	$(CC) $(CFLAGS) $(obj) $(addsuffix .o, $@) -o $@ $(LDFLAGS)
 
 obj/%.o: ../src/%.cpp Makefile

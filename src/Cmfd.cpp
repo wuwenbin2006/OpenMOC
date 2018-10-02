@@ -402,9 +402,10 @@ void Cmfd::setNumDomains(int num_x, int num_y, int num_z) {
   
   /* To check the position of domain decomposition interfaces in non-uniform CMFD
     mesh interfaces*/
+  int j;
   for(int i=0; i<num_x; i++) {
     double coord = (i + 1) * _width_x / num_x;
-    for(int j=1; j<_num_x+1; j++) {
+    for(j=1; j<_num_x+1; j++) {
       if(fabs(coord - _accumulate_x[j]) < FLT_EPSILON) {
         _accumulate_lmx[i+1] = j;
         break;
@@ -420,7 +421,7 @@ void Cmfd::setNumDomains(int num_x, int num_y, int num_z) {
     mesh interfaces*/
   for(int i=0; i<num_y; i++) {
     double coord = (i + 1) * _width_y / num_y;
-    for(int j=1; j<_num_y+1; j++) {
+    for(j=1; j<_num_y+1; j++) {
       if(fabs(coord - _accumulate_y[j]) < FLT_EPSILON) {
         _accumulate_lmy[i+1] = j;
         break;
@@ -436,7 +437,7 @@ void Cmfd::setNumDomains(int num_x, int num_y, int num_z) {
     mesh interfaces*/
   for(int i=0; i<num_z; i++) {
     double coord = (i + 1) * _width_z / num_z;
-    for(int j=1; j<_num_z+1; j++) {
+    for(j=1; j<_num_z+1; j++) {
       if(fabs(coord - _accumulate_z[j]) < FLT_EPSILON) {
         _accumulate_lmz[i+1] = j;
         break;

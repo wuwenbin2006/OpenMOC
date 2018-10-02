@@ -706,6 +706,7 @@ void Geometry::setDomainDecomposition(int nx, int ny, int nz, MPI_Comm comm) {
     double offset_y = width_y / 2.0 + getMinY();
     double offset_z = width_z / 2.0 + getMinZ();
     _domain_bounds->setOffset(offset_x, offset_y, offset_z);
+    _domain_bounds->computeSizes();
     log_printf(NORMAL, "Successfully set %d x %d x %d domain decomposition",
                         nx, ny, nz);
   }
@@ -2998,21 +2999,6 @@ void Geometry::initializeCmfd() {
   if (_domain_decomposed) {
 
     /* Check that CMFD mesh is compatible with domain decomposition */
-    if (_cmfd != NULL) {
-      if (_cmfd->getNumX() % _num_domains_x != 0)
-        log_printf(ERROR, "CMFD mesh is incompatible with domain decomposition"
-                   " in the X direction, make sure the mesh aligns with domain"
-                   " boundaries");
-      if (_cmfd->getNumY() % _num_domains_z != 0)
-        log_printf(ERROR, "CMFD mesh is incompatible with domain decomposition"
-                   " in the Y direction, make sure the mesh aligns with domain"
-                   " boundaries");
-      if (_cmfd->getNumZ() % _num_domains_z != 0)
-        log_printf(ERROR, "CMFD mesh is incompatible with domain decomposition"
-                   " in the Z direction, make sure the mesh aligns with domain"
-                   " boundaries");
-    }
-
     _cmfd->setNumDomains(_num_domains_x, _num_domains_y, _num_domains_z);
     _cmfd->setDomainIndexes(_domain_index_x, _domain_index_y, _domain_index_z);
   }

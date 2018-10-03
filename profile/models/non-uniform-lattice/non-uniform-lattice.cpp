@@ -41,14 +41,14 @@ int main(int argc,  char* argv[]) {
   /*std::vector<std::vector<double> > cmfd_widths{{0.05,0.1,0.2,0.3,0.4,0.26,1.26, 0.05},
   	{0.05,0.1,0.2,0.3,0.4,0.26,1.26, 0.05},
   	{1,0.25,1.25}};*/
-  	std::vector<std::vector<double> > cmfd_widths{{0.05,0.63,0.63,1.26, 0.05},
-  	{0.05,1.26,0.63,0.63, 0.05},
-  	{1.25,1.0,0.25}};
+  	std::vector<std::vector<double> > cmfd_widths{{0.05,0.63,0.63,0.63,0.63, 0.05},
+  	{0.05,0.63,0.63,0.63,0.63, 0.05},
+  	{1.25,1.25}};
   cmfd->setWidths(cmfd_widths);
   cmfd->setCentroidUpdateOn(true); 
 	std::vector<std::vector<int> > cmfd_group_structure{{1,2,3},{4,5},{6,7}};
   cmfd->setGroupStructure(cmfd_group_structure);
-  cmfd->setKNearest(5);
+  cmfd->setKNearest(1);
 
 
   /* Load the geometry */

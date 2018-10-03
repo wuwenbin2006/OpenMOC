@@ -263,6 +263,7 @@ void Cmfd::setNumX(int num_x) {
 
   _num_x = num_x;
   _local_num_x = _num_x;
+  _local_num_xn = _local_num_x;
   if (_domain_communicator != NULL)
     _local_num_x = _num_x / _domain_communicator->_num_domains_x;
 }
@@ -280,6 +281,7 @@ void Cmfd::setNumY(int num_y) {
 
   _num_y = num_y;
   _local_num_y = _num_y;
+  _local_num_yn = _local_num_y;
   if (_domain_communicator != NULL)
     _local_num_y = _num_y / _domain_communicator->_num_domains_y;
 }
@@ -297,6 +299,7 @@ void Cmfd::setNumZ(int num_z) {
 
   _num_z = num_z;
   _local_num_z = _num_z;
+  _local_num_zn = _local_num_z;
   if (_domain_communicator != NULL)
     _local_num_z = _num_z / _domain_communicator->_num_domains_z;
 
@@ -767,11 +770,9 @@ CMFD_PRECISION Cmfd::getDiffusionCoefficient(int cmfd_cell, int group) {
  * @return The surface diffusion coefficient, (\f$ \hat{D} \f$) or
  *         (\f$ \tilde{D} \f$)
  */
-CMFD_PRECISION Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
-                                                  int group, int moc_iteration,
-                                                  bool correction) {
+void Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
+    int group, int moc_iteration,double& dif_surf, double& dif_surf_corr){
 
-  CMFD_PRECISION dif_surf, dif_surf_corr;
   FP_PRECISION current, current_out, current_in;
   CMFD_PRECISION flux_next;
 
@@ -912,10 +913,10 @@ CMFD_PRECISION Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
     dif_surf_corr = 0.0;
 
   /* Determine which surface diffusion coefficient is corrected */
-  if (correction)
+  /*if (correction)
     return dif_surf_corr;
   else
-    return dif_surf;
+    return dif_surf;*/
 }
 
 
@@ -1135,12 +1136,11 @@ void Cmfd::constructMatrices(int moc_iteration) {
           sense = getSense(s);
           delta = getSurfaceWidth(s, global_ind);
 
-          /* Set transport term on diagonal */
-          dif_surf = getSurfaceDiffusionCoefficient(
-              i, s, e, moc_iteration, false);
-          dif_surf_corr = getSurfaceDiffusionCoefficient(
-              i, s, e, moc_iteration, true);
-
+          /* Set transport term on diagonal.
+          dif_surf and dif_surf_corr are modified via reference */
+           getSurfaceDiffusionCoefficient(i, s, e, moc_iteration, dif_surf, 
+                                          dif_surf_corr);
+           
           /* Record the corrected diffusion coefficient */
           _old_dif_surf_corr->setValue(i, s*_num_cmfd_groups+e, dif_surf_corr);
           _old_dif_surf_valid = true;
@@ -2736,7 +2736,7 @@ CMFD_PRECISION Cmfd::getUpdateRatio(int cell_id, int group, int fsr) {
          iter != _k_nearest_stencils[fsr].end(); ++iter) {
 
       if (iter->first != 4) {
-        cell_next_id = getCellByStencil(getLocalCMFDCell(cell_id), iter->first);
+        cell_next_id = getCellByStencil(cell_id, iter->first);//cell_id is Local itself here.
 
         ratio += iter->second * getFluxRatio(cell_next_id, group, fsr);
       }

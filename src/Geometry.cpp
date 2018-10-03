@@ -817,6 +817,8 @@ void Geometry::setOverlaidMesh(double axial_mesh_height, int num_x, int num_y,
   offset.setY(min_y + (max_y - min_y)/2.0);
   offset.setZ(min_z + (max_z - min_z)/2.0);
   _overlaid_mesh->setOffset(offset.getX(), offset.getY(), offset.getZ());
+  
+  _overlaid_mesh->computeSizes();
 
   log_printf(NORMAL, "Set global axial mesh of width %6.4f cm",
              axial_mesh_height);

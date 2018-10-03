@@ -13,7 +13,7 @@ int main(int argc,  char* argv[]) {
   log_set_ranks(MPI_COMM_WORLD);
 #endif
 
-	set_line_length(100);
+	set_line_length(120);
   std::string file = "non-uniform-lattice.geo";
   
   double start_time = omp_get_wtime();
@@ -45,9 +45,10 @@ int main(int argc,  char* argv[]) {
   	{0.05,1.26,0.63,0.63, 0.05},
   	{1.25,1.0,0.25}};
   cmfd->setWidths(cmfd_widths);
-  cmfd->setCentroidUpdateOn(false); 
+  cmfd->setCentroidUpdateOn(true); 
 	std::vector<std::vector<int> > cmfd_group_structure{{1,2,3},{4,5},{6,7}};
   cmfd->setGroupStructure(cmfd_group_structure);
+  cmfd->setKNearest(5);
 
 
   /* Load the geometry */

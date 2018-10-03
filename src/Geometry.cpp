@@ -2995,10 +2995,7 @@ void Geometry::initializeCmfd() {
   offset.setZ(min_z + (max_z - min_z)/2.0);
 
   _cmfd->initializeLattice(&offset);
-  
-  /* Intialize CMFD Maps */
-  _cmfd->initializeCellMap();
-  
+
   _cmfd->setGeometry(this);
 
 #ifdef MPIx
@@ -3009,6 +3006,8 @@ void Geometry::initializeCmfd() {
     _cmfd->setDomainIndexes(_domain_index_x, _domain_index_y, _domain_index_z);
   }
 #endif
+  /* Intialize CMFD Maps */
+  _cmfd->initializeCellMap();
 }
 
 
@@ -3277,14 +3276,12 @@ std::vector<double> Geometry::getUniqueZHeights(bool include_overlaid_mesh) {
       int ny = lattice->getNumY();
       int nz = lattice->getNumZ();
 
-      /* Get offset of the lattice */
-      z_offset += lattice->getOffset()->getZ();
-
       /* Calculate z-intersections */
-      double width = lattice->getWidthZ();
-      double offset = z_offset - nz * width / 2;
+      const std::vector<double>& accumulatez = lattice->getAccumulateZ();
+      /* Get offset of the lattice */
+      double offset = z_offset + lattice->getMinZ();
       for (int k=0; k<nz+1; k++) {
-        double z_height = k * width + offset;
+        double z_height = accumulatez[k]+ offset;
         z_heights.push_back(z_height);
       }
 

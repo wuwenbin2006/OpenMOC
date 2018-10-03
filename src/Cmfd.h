@@ -364,9 +364,8 @@ private:
   CMFD_PRECISION getUpdateRatio(int cell_id, int moc_group, int fsr);
   double getDistanceToCentroid(Point* centroid, int cell_id,
                                      int stencil_index);
-  CMFD_PRECISION getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
-                                                int group, int moc_iteration,
-                                                bool correction);
+  void getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
+        int group, int moc_iteration,double& dif_surf, double& dif_surf_corr);
   CMFD_PRECISION getDiffusionCoefficient(int cmfd_cell, int group);
   CMFD_PRECISION getSurfaceWidth(int surface, int global_ind);
   CMFD_PRECISION getPerpendicularSurfaceWidth(int surface, int global_ind);

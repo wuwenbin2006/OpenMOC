@@ -618,3 +618,208 @@ void log_set_ranks(MPI_Comm comm) {
   MPI_Comm_rank(comm, &rank);
 }
 #endif
+
+
+int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
+  
+  int arg_index = 0;
+  int print_usage = 0;
+  
+  while (arg_index < argc) {
+    if(strcmp(argv[arg_index], "-debug") == 0) {
+      arg_index++;
+      RP._debug_flag = atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-ndx") == 0) {
+      arg_index++;
+      RP._NDx=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-ndy") == 0){
+      arg_index++;
+      RP._NDy=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-ndz") == 0) {
+      arg_index++;
+      RP._NDz=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-nmx") == 0) {
+      arg_index++;
+      RP._NMx=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-nmy") == 0) {
+      arg_index++;
+      RP._NMy=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-nmz") == 0 ) {
+      arg_index++;
+      RP._NMz=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-ncx") == 0) {
+      arg_index++;
+      RP._NCx=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-ncy") == 0) {
+      arg_index++;
+      RP._NCy=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-ncz") == 0) {
+      arg_index++;
+      RP._NCz=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-nox") == 0) {
+      arg_index++;
+      RP._NOx=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-noy") == 0) {
+      arg_index++;
+      RP._NOy=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-noz") == 0) {
+      arg_index++;
+      RP._NOz=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-num_threads") == 0 ) {
+      arg_index++;
+      RP._num_threads=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-azim_spacing") == 0) {
+      arg_index++;
+      RP._azim_spacing=atof(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-num_azim") == 0) {
+      arg_index++;
+      RP._num_azim=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-polar_spacing") == 0) {
+      arg_index++;
+      RP._polar_spacing=atof(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-num_polar") == 0) {
+      arg_index++;
+      RP._num_polar=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-tolerance") == 0) {
+      arg_index++;
+      RP._tolerance=atof(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-max_iters") == 0) {
+      arg_index++;
+      RP._max_iters=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-log_level") == 0) {
+      arg_index++;
+      RP._log_level=argv[arg_index++];
+    }
+    else if(strcmp(argv[arg_index], "-knearest") == 0) {
+      arg_index++;
+      RP._knearest=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-CMFD_flux_update_on") == 0) {
+      arg_index++;
+      RP._CMFD_flux_update_on=atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-CMFD_centroid_update_on") == 0) {
+      arg_index++;
+      RP._CMFD_centroid_update_on=atoi(argv[arg_index++]);
+    } 
+    else if(strcmp(argv[arg_index], "-use_axial_interpolation") == 0) {
+      arg_index++;
+      RP._use_axial_interpolation=atoi(argv[arg_index++]);
+    } 
+    else if(strcmp(argv[arg_index], "-help") == 0) {
+      print_usage = 1;
+      break;
+    }
+    else if(strcmp(argv[arg_index], "-log_filename") == 0) {
+      arg_index++;
+      RP._log_filename = argv[arg_index++];
+    }
+    else if(strcmp(argv[arg_index], "-geo_file_name") == 0) {
+      arg_index++;
+      RP._geo_filename = std::string(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-widths_x") == 0) {
+      arg_index++;
+      char *buf = argv[arg_index];
+      char *outer_ptr = NULL;
+      char *p;
+      while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
+        RP._cell_widths_x.push_back(atof(p));
+        buf = NULL;
+      }
+      arg_index++;
+    }
+    else if(strcmp(argv[arg_index], "-widths_y") == 0) {
+      arg_index++;
+      char *buf = argv[arg_index];
+      char *outer_ptr = NULL;
+      char *p;
+      while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
+        RP._cell_widths_y.push_back(atof(p));
+        buf = NULL;
+      }
+      arg_index++;      
+    }
+    else if(strcmp(argv[arg_index], "-widths_z") == 0) {
+      arg_index++;
+      char *buf = argv[arg_index];
+      char *outer_ptr = NULL;
+      char *p;
+      while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
+        RP._cell_widths_z.push_back(atof(p));
+        buf = NULL;
+      }
+      arg_index++;
+    }
+    else if(strcmp(argv[arg_index], "-ls_solver") == 0) {
+      arg_index++;
+      RP._linear_solver=atoi(argv[arg_index++]);
+    }
+    else {
+      arg_index++;
+    }
+  }
+  int myid;
+  //-num_threads 2 -azim_spacing 0.05 -num_azim 16 -polar_spacing 1.0 -num_polar 6 -tolerance 1.0e-5 \
+  //-max_iters 40 -log_level DEBUG -knearest 3 -CMFD_flux_update_on 1 -CMFD_centroid_update_on 1
+#ifdef MPIx
+  MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+#endif
+  if ((print_usage) && (myid == 0))
+    {
+    printf("\nRuntime_Parametres usage To be fixup\n");
+    printf("Usage: %s [<options>], default value in ()\n", argv[0]);
+    printf("\n");
+    printf("-debug                  : 1 or (0), stuck in infinite while loop\n");
+    printf("-ndx, -ndy, -ndz        : (1,1,1) domain decomposation Topo\n");
+    printf("-nmx, -nmy, -nmz        : (1,1,1) modular Topo in a domain\n");
+    printf("-ncx, -ncy, -ncz        : (1,1,1)CMFD lattice Topo\n");
+    printf("-nox, -noy, -noz        : (1,1,1)reaction output Topo\n");
+    printf("-num_threads            : (1) Number of OpenMP threads to use\n");
+    printf("-azim_spacing           : (0.05)\n");
+    printf("-num_azim               : (64)\n");
+    printf("-polar_spacing          : (0.75)\n");
+    printf("-num_polar              : (10)\n");
+    printf("-max_iters              : (40) Max. Number of outter iterations\n");
+    printf("-log_level              : (NORMAL)\n");
+    printf("-knearest               : (1) knearest CMFD update\n");
+    printf("-CMFD_flux_update_on    : (1)switch of the CMFD update\n");
+    printf("-CMFD_centroid_update_on: (1)switch of the CMFD knearest centroid update\n");
+    printf("-use_axial_interpolation: (0)switch of the CMFD axial interpolation update\n");
+    printf("-log_file_name          : (NULL) the file name of the log file\n");
+    printf("-geo_file_name          : (NULL) the file name of the geometry file\n");
+    printf("-widths_x               : (null) the widths of non-uniform CMFD meshes in x direction\n");
+    printf("-widths_y               : (null) the widths of non-uniform CMFD meshes in y direction\n");
+    printf("-widths_z               : (null) the widths of non-uniform CMFD meshes in z direction\n");
+    printf("-ls_solver              : (1) set the linear source solver\n");
+    printf("\n");
+    }
+  
+  if (print_usage) {
+#ifdef MPIx
+    MPI_Finalize();
+#endif
+    exit(0);
+    //return (0);
+  }
+}

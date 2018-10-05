@@ -40,6 +40,8 @@
 #define printf PySys_WriteStdout
 #endif
 
+/* A Vector3D is simply a 3-dimensional std::vector of doubles */
+typedef std::vector<std::vector<std::vector<double> > > Vector3D;
 
 /**
  * @enum logLevels
@@ -129,8 +131,10 @@ struct Runtime_Parametres {
     _num_threads(1), _azim_spacing(0.05), _num_azim(64), _polar_spacing(0.75), 
     _num_polar(10), _tolerance(1.0E-5), _max_iters(40), _log_level("NORMAL"),
     _knearest(1), _CMFD_flux_update_on(true), _CMFD_centroid_update_on(false),
-    _use_axial_interpolation(false), _log_filename(NULL), 
-    _linear_solver(true)
+    _use_axial_interpolation(false), _log_filename(NULL), _linear_solver(true),
+    _MOC_src_residual_type(1), _SOR_factor(1.0), _CMFD_relaxation_factor(1.0),
+    _segmentation_type(3), _verbose_report(true), _time_report(true)
+    
     {}
   bool _debug_flag; //To debug or not when running, dead while loop
   int _NDx, _NDy, _NDz; //Domain decomposation Topo
@@ -142,7 +146,7 @@ struct Runtime_Parametres {
   int _num_azim;
   double _polar_spacing;
   int _num_polar;
-  double _tolerance;
+  double _tolerance; //MOC source convergence tolerance
   int _max_iters;
   const char* _log_level;
   int _knearest; //the order of knearest update
@@ -158,6 +162,17 @@ struct Runtime_Parametres {
   std::vector<double> _cell_widths_z;
   
   bool _linear_solver; //Linear source if true
+  
+  std::vector<double> _seg_zones;
+  int _MOC_src_residual_type;
+  double _SOR_factor;
+  double _CMFD_relaxation_factor;
+  std::vector<std::vector<int>> _CMFD_group_structure;
+  int _segmentation_type;
+  bool _verbose_report;
+  bool _time_report;
+  Vector3D _mesh_lattice_widths; //widths of multiple output meshes with non-uniform lattice
+  std::vector<std::vector<double>> _mesh_lattice_offsets; //offsets of multiple output meshes with non-uniform lattice
 
 };
 

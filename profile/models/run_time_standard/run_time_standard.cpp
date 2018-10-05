@@ -23,6 +23,8 @@ int main(int argc, char* argv[]) {
   Runtime_Parametres runtime;
   set_Runtime_Parametres(runtime, argc, argv);
   
+  residualType aaa = (residualType)runtime._MOC_src_residual_type;
+  segmentationType bbb = (segmentationType)runtime._segmentation_type;
   /* stuck here for debug tools to attach */
   while (runtime._debug_flag) ;
   
@@ -83,7 +85,7 @@ int main(int argc, char* argv[]) {
                                    runtime._polar_spacing);
   track_generator.setNumThreads(num_threads);
   track_generator.setQuadrature(quad);
-  track_generator.setSegmentFormation(OTF_STACKS);
+  track_generator.setSegmentFormation((segmentationType)runtime._segmentation_type);
   std::vector<FP_PRECISION> seg_zones {-32.13, -10.71, 10.71, 32.13};
   track_generator.setSegmentationZones(seg_zones);
   track_generator.generateTracks();
@@ -94,7 +96,8 @@ int main(int argc, char* argv[]) {
   solver.setVerboseIterationReport();
   solver.setNumThreads(num_threads);
   solver.setConvergenceThreshold(runtime._tolerance);
-  solver.computeEigenvalue(runtime._max_iters);
+  solver.computeEigenvalue(runtime._max_iters, 
+                           (residualType)runtime._MOC_src_residual_type);
   solver.printTimerReport();
 
   /* Extract reaction rates */

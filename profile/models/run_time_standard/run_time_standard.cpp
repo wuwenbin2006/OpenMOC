@@ -17,14 +17,12 @@ int main(int argc, char* argv[]) {
   while (arg_index < argc) {
     msg_string += argv[arg_index];
     msg_string += " ";
-    arg_index++;    
+    arg_index++;
   }
   
   Runtime_Parametres runtime;
   set_Runtime_Parametres(runtime, argc, argv);
   
-  residualType aaa = (residualType)runtime._MOC_src_residual_type;
-  segmentationType bbb = (segmentationType)runtime._segmentation_type;
   /* stuck here for debug tools to attach */
   while (runtime._debug_flag) ;
   
@@ -41,7 +39,7 @@ int main(int argc, char* argv[]) {
   set_log_level(runtime._log_level);
   set_line_length(120);
 
-  log_printf(NORMAL, "%s", msg_string.c_str());
+  log_printf(NORMAL, "Run-time options: %s", msg_string.c_str());
   log_printf(NORMAL, "Azimuthal spacing = %f", runtime._azim_spacing);
   log_printf(NORMAL, "Azimuthal angles = %d", runtime._num_azim);
   log_printf(NORMAL, "Polar spacing = %f", runtime._polar_spacing);
@@ -50,7 +48,8 @@ int main(int argc, char* argv[]) {
   /* Create CMFD mesh */
   log_printf(NORMAL, "Creating CMFD mesh...");
   Cmfd* cmfd = new Cmfd();
-  cmfd->setSORRelaxationFactor(1.5);
+  cmfd->setSORRelaxationFactor(runtime._SOR_factor);
+  cmfd->setCMFDRelaxationFactor(runtime._CMFD_relaxation_factor);
   if(runtime._cell_widths_x.empty() || runtime._cell_widths_y.empty() ||
       runtime._cell_widths_z.empty()) 
     cmfd->setLatticeStructure(runtime._NCx, runtime._NCy, runtime._NCz);
@@ -59,8 +58,8 @@ int main(int argc, char* argv[]) {
         runtime._cell_widths_y, runtime._cell_widths_z};
     cmfd->setWidths(cmfd_widths);
   }
-  std::vector<std::vector<int> > cmfd_group_structure{{1,2,3},{4,5},{6,7}};
-  cmfd->setGroupStructure(cmfd_group_structure);
+  if(!runtime._CMFD_group_structure.empty())
+    cmfd->setGroupStructure(runtime._CMFD_group_structure);
   cmfd->setKNearest(runtime._knearest);
   cmfd->setCentroidUpdateOn(runtime._CMFD_centroid_update_on);
   cmfd->useAxialInterpolation(runtime._use_axial_interpolation);
@@ -68,6 +67,8 @@ int main(int argc, char* argv[]) {
   /* Create the geometry */
   log_printf(NORMAL, "Creating geometry...");
   Geometry *geometry = new Geometry();
+  if(runtime._geo_filename.empty())
+    log_printf(ERROR, "No geometry file is provided");
   geometry->loadFromFile(runtime._geo_filename, false); 
 #ifdef MPIx
   geometry->setDomainDecomposition(runtime._NDx, runtime._NDy, runtime._NDz, MPI_COMM_WORLD); 
@@ -78,7 +79,22 @@ int main(int argc, char* argv[]) {
 
   /* Generate tracks */
   log_printf(NORMAL, "Initializing the track generator...");
-  Quadrature* quad = new EqualWeightPolarQuad();
+  Quadrature* quad = NULL;
+  switch(runtime._quadraturetype) {
+    case(0): quad = new TYPolarQuad(); break;
+    case(1): quad = new LeonardPolarQuad(); break;
+    case(2): quad = new GLPolarQuad(); break;
+    case(3): quad = new EqualWeightPolarQuad(); break;
+    case(4): quad = new EqualAnglePolarQuad(); break;
+  }
+enum quadratureType {
+  TABUCHI_YAMAMOTO,
+  LEONARD,
+  GAUSS_LEGENDRE,
+  EQUAL_WEIGHT,
+  EQUAL_ANGLE
+  };
+    new EqualWeightPolarQuad();
   quad->setNumAzimAngles(runtime._num_azim);
   quad->setNumPolarAngles(runtime._num_polar);
   TrackGenerator3D track_generator(geometry, runtime._num_azim, runtime._num_polar, runtime._azim_spacing,
@@ -86,22 +102,28 @@ int main(int argc, char* argv[]) {
   track_generator.setNumThreads(num_threads);
   track_generator.setQuadrature(quad);
   track_generator.setSegmentFormation((segmentationType)runtime._segmentation_type);
-  std::vector<FP_PRECISION> seg_zones {-32.13, -10.71, 10.71, 32.13};
-  track_generator.setSegmentationZones(seg_zones);
+  if(!runtime._seg_zones.empty())
+    track_generator.setSegmentationZones(runtime._seg_zones);
   track_generator.generateTracks();
 
   /* Run simulation */
-  CPULSSolver solver(&track_generator);
+  CPUSolver *solver = NULL;
+  if(runtime._linear_solver)
+    solver= new CPULSSolver(&track_generator);
+  else
+    solver= new CPUSolver(&track_generator);
   //solver.useExponentialIntrinsic();
-  solver.setVerboseIterationReport();
-  solver.setNumThreads(num_threads);
-  solver.setConvergenceThreshold(runtime._tolerance);
-  solver.computeEigenvalue(runtime._max_iters, 
+  if(runtime._verbose_report)
+    solver->setVerboseIterationReport();
+  solver->setNumThreads(num_threads);
+  solver->setConvergenceThreshold(runtime._tolerance);
+  solver->computeEigenvalue(runtime._max_iters, 
                            (residualType)runtime._MOC_src_residual_type);
-  solver.printTimerReport();
+  if(runtime._time_report)
+    solver->printTimerReport();
 
   /* Extract reaction rates */
-  Mesh mesh(&solver);
+  Mesh mesh(solver);
   mesh.createLattice(runtime._NOx, runtime._NOy, runtime._NOz);
   Vector3D rx_rates = mesh.getFormattedReactionRates(FISSION_RX);
 

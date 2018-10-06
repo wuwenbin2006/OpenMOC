@@ -630,53 +630,61 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
       arg_index++;
       RP._debug_flag = atoi(argv[arg_index++]);
     }
-    else if(strcmp(argv[arg_index], "-ndx") == 0) {
+    else if(strcmp(argv[arg_index], "-domain_decompose") == 0) {
+      int *pointer[] = {&RP._NDx, &RP._NDy, &RP._NDz};
+      int i = 0;
       arg_index++;
-      RP._NDx=atoi(argv[arg_index++]);
+      char *buf = argv[arg_index];
+      char *outer_ptr = NULL;
+      char *p;
+      while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
+        *pointer[i] = atoi(p);
+        i++;
+        buf = NULL;
+      }
+      arg_index++;
     }
-    else if(strcmp(argv[arg_index], "-ndy") == 0){
+    else if(strcmp(argv[arg_index], "-num_domain_modules") == 0) {
+      int *pointer[] = {&RP._NMx, &RP._NMy, &RP._NMz};
+      int i = 0;
       arg_index++;
-      RP._NDy=atoi(argv[arg_index++]);
+      char *buf = argv[arg_index];
+      char *outer_ptr = NULL;
+      char *p;
+      while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
+        *pointer[i] = atoi(p);
+        i++;
+        buf = NULL;
+      }
+      arg_index++;
     }
-    else if(strcmp(argv[arg_index], "-ndz") == 0) {
+    else if(strcmp(argv[arg_index], "-CMFD_lattice") == 0) {
+      int *pointer[] = {&RP._NCx, &RP._NCy, &RP._NCz};
+      int i = 0;
       arg_index++;
-      RP._NDz=atoi(argv[arg_index++]);
+      char *buf = argv[arg_index];
+      char *outer_ptr = NULL;
+      char *p;
+      while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
+        *pointer[i] = atoi(p);
+        i++;
+        buf = NULL;
+      }
+      arg_index++;
     }
-    else if(strcmp(argv[arg_index], "-nmx") == 0) {
+    else if(strcmp(argv[arg_index], "-output_mesh_lattice") == 0) {
+      int *pointer[] = {&RP._NOx, &RP._NOy, &RP._NOz};
+      int i = 0;
       arg_index++;
-      RP._NMx=atoi(argv[arg_index++]);
-    }
-    else if(strcmp(argv[arg_index], "-nmy") == 0) {
+      char *buf = argv[arg_index];
+      char *outer_ptr = NULL;
+      char *p;
+      while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
+        *pointer[i] = atoi(p);
+        i++;
+        buf = NULL;
+      }
       arg_index++;
-      RP._NMy=atoi(argv[arg_index++]);
-    }
-    else if(strcmp(argv[arg_index], "-nmz") == 0 ) {
-      arg_index++;
-      RP._NMz=atoi(argv[arg_index++]);
-    }
-    else if(strcmp(argv[arg_index], "-ncx") == 0) {
-      arg_index++;
-      RP._NCx=atoi(argv[arg_index++]);
-    }
-    else if(strcmp(argv[arg_index], "-ncy") == 0) {
-      arg_index++;
-      RP._NCy=atoi(argv[arg_index++]);
-    }
-    else if(strcmp(argv[arg_index], "-ncz") == 0) {
-      arg_index++;
-      RP._NCz=atoi(argv[arg_index++]);
-    }
-    else if(strcmp(argv[arg_index], "-nox") == 0) {
-      arg_index++;
-      RP._NOx=atoi(argv[arg_index++]);
-    }
-    else if(strcmp(argv[arg_index], "-noy") == 0) {
-      arg_index++;
-      RP._NOy=atoi(argv[arg_index++]);
-    }
-    else if(strcmp(argv[arg_index], "-noz") == 0) {
-      arg_index++;
-      RP._NOz=atoi(argv[arg_index++]);
     }
     else if(strcmp(argv[arg_index], "-num_threads") == 0 ) {
       arg_index++;
@@ -698,7 +706,7 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
       arg_index++;
       RP._num_polar=atoi(argv[arg_index++]);
     }
-    else if(strcmp(argv[arg_index], "-tolerance") == 0) {
+    else if(strcmp(argv[arg_index], "-MOC_src_tolerance") == 0) {
       arg_index++;
       RP._tolerance=atof(argv[arg_index++]);
     }
@@ -821,10 +829,6 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
       }
       arg_index++;
     }  
-  
-  
-  
-  
     else if(strcmp(argv[arg_index], "-verbose_report") == 0) {
       arg_index++;
       RP._verbose_report = atoi(argv[arg_index++]);
@@ -832,6 +836,10 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
     else if(strcmp(argv[arg_index], "-time_report") == 0) {
       arg_index++;
       RP._time_report = atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-quadraturetype") == 0) {
+      arg_index++;
+      RP._quadraturetype = atoi(argv[arg_index++]);
     } 
     else {
       arg_index++;
@@ -847,17 +855,17 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
     printf("\nRuntime_Parametres usage To be fixup\n");
     printf("Usage: %s [<options>], default value in ()\n", argv[0]);
     printf("\n");
-    printf("-debug                  : 1 or (0), stuck in infinite while loop\n");
-    printf("-ndx, -ndy, -ndz        : (1,1,1) domain decomposation Topo\n");
-    printf("-nmx, -nmy, -nmz        : (1,1,1) modular Topo in a domain\n");
-    printf("-ncx, -ncy, -ncz        : (1,1,1)CMFD lattice Topo\n");
-    printf("-nox, -noy, -noz        : (1,1,1)reaction output Topo\n");
+    printf("-debug                  : (0) or 1, stuck in infinite while loop\n");
+    printf("-domain_decompose       : (1,1,1) domain decomposation Topo\n");
+    printf("-num_domain_modules     : (1,1,1) modular Topo in a domain\n");
+    printf("-CMFD_lattice           : (1,1,1)CMFD lattice Topo\n");
+    printf("-output_mesh_lattice    : (0,0,0)reaction output mesh lattice\n");
     printf("-num_threads            : (1) Number of OpenMP threads to use\n");
     printf("-azim_spacing           : (0.05)\n");
     printf("-num_azim               : (64)\n");
     printf("-polar_spacing          : (0.75)\n");
     printf("-num_polar              : (10)\n");
-    printf("-MOC_src_tolerance      : (1.0E-5) MOC source convergence tolerance\n");
+    printf("-MOC_src_tolerance      : (1.0E-4) MOC source convergence tolerance\n");
     printf("-MOC_src_residual_type  : (1-FISSION_SOURCE) 0-SCALAR_FLUX, 1-FISSION_SOURCE, 2-TOTAL_SOURCE\n");
 
     
@@ -867,7 +875,7 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
     printf("-CMFD_flux_update_on    : (1)switch of the CMFD update\n");
     printf("-CMFD_centroid_update_on: (1)switch of the CMFD knearest centroid update\n");
     printf("-use_axial_interpolation: (0)switch of the CMFD axial interpolation update\n");
-    printf("-SOR_factor:            : (1.0)set CMFD SOR relaxation factor\n");
+    printf("-SOR_factor             : (1.0)set CMFD SOR relaxation factor\n");
     printf("-CMFD_relaxation_factor : (1.0)set CMFD relaxation factor\n");
     printf("-CMFD_group_structure   : (No group condensation) set CMFD group structure with ',' and '/' \n");
 
@@ -883,7 +891,13 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
     
     printf("-verbose_report         : (1)switch of the verbose iteration report\n");
     printf("-time_report            : (1)switch of the time report\n");
-    
+    printf("-quadraturetype         : (2 - GAUSS_LEGENDRE) is default value\n"
+           "                          0 - TABUCHI_YAMAMOTO\n"
+           "                          1 - LEONARD\n"
+           "                          2 - GAUSS_LEGENDRE\n"
+           "                          3 - EQUAL_WEIGHT\n"
+           "                          4 - EQUAL_ANGLE\n"
+          );
     printf("\n");
   }
   

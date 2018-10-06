@@ -127,13 +127,14 @@ void log_set_ranks(MPI_Comm comm);
 
 struct Runtime_Parametres {
   Runtime_Parametres() : _debug_flag(false), _NDx(1), _NDy(1), _NDz(1),
-    _NMx(1), _NMy(1), _NMz(1), _NCx(1), _NCy(1), _NCz(1), _NOx(1), _NOy(1), _NOz(1),
+    _NMx(1), _NMy(1), _NMz(1), _NCx(1), _NCy(1), _NCz(1), _NOx(0), _NOy(0), _NOz(0),
     _num_threads(1), _azim_spacing(0.05), _num_azim(64), _polar_spacing(0.75), 
-    _num_polar(10), _tolerance(1.0E-5), _max_iters(40), _log_level("NORMAL"),
+    _num_polar(10), _tolerance(1.0E-4), _max_iters(40), _log_level("NORMAL"),
     _knearest(1), _CMFD_flux_update_on(true), _CMFD_centroid_update_on(false),
     _use_axial_interpolation(false), _log_filename(NULL), _linear_solver(true),
     _MOC_src_residual_type(1), _SOR_factor(1.0), _CMFD_relaxation_factor(1.0),
-    _segmentation_type(3), _verbose_report(true), _time_report(true)
+    _segmentation_type(3), _verbose_report(true), _time_report(true),
+    _quadraturetype(2)
     
     {}
   bool _debug_flag; //To debug or not when running, dead while loop
@@ -171,6 +172,7 @@ struct Runtime_Parametres {
   int _segmentation_type;
   bool _verbose_report;
   bool _time_report;
+  int _quadraturetype;
   Vector3D _mesh_lattice_widths; //widths of multiple output meshes with non-uniform lattice
   std::vector<std::vector<double>> _mesh_lattice_offsets; //offsets of multiple output meshes with non-uniform lattice
 

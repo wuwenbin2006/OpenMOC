@@ -673,18 +673,21 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
       arg_index++;
     }
     else if(strcmp(argv[arg_index], "-output_mesh_lattice") == 0) {
-      int *pointer[] = {&RP._NOx, &RP._NOy, &RP._NOz};
-      int i = 0;
+      std::vector<int> tmp;
       arg_index++;
       char *buf = argv[arg_index];
       char *outer_ptr = NULL;
       char *p;
       while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
-        *pointer[i] = atoi(p);
-        i++;
+        tmp.push_back(atoi(p));
         buf = NULL;
       }
+      RP._output_mesh_lattices.push_back(tmp);
       arg_index++;
+    }
+    else if(strcmp(argv[arg_index], "-output_type") == 0 ) {
+      arg_index++;
+      RP._output_types.push_back(atoi(argv[arg_index++]));
     }
     else if(strcmp(argv[arg_index], "-num_threads") == 0 ) {
       arg_index++;
@@ -897,6 +900,12 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
            "                          2 - GAUSS_LEGENDRE\n"
            "                          3 - EQUAL_WEIGHT\n"
            "                          4 - EQUAL_ANGLE\n"
+          );
+    printf("-output_type            : (0 - FISSION_RX) set the output reaction types\n"
+           "                          0 - FISSION_RX\n"
+           "                          1 - TOTAL_RX\n"
+           "                          2 - ABSORPTION_RX\n"
+           "                          3 - FLUX_RX\n"
           );
     printf("\n");
   }

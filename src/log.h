@@ -127,7 +127,7 @@ void log_set_ranks(MPI_Comm comm);
 
 struct Runtime_Parametres {
   Runtime_Parametres() : _debug_flag(false), _NDx(1), _NDy(1), _NDz(1),
-    _NMx(1), _NMy(1), _NMz(1), _NCx(1), _NCy(1), _NCz(1), _NOx(0), _NOy(0), _NOz(0),
+    _NMx(1), _NMy(1), _NMz(1), _NCx(1), _NCy(1), _NCz(1), 
     _num_threads(1), _azim_spacing(0.05), _num_azim(64), _polar_spacing(0.75), 
     _num_polar(10), _tolerance(1.0E-4), _max_iters(40), _log_level("NORMAL"),
     _knearest(1), _CMFD_flux_update_on(true), _CMFD_centroid_update_on(false),
@@ -141,7 +141,6 @@ struct Runtime_Parametres {
   int _NDx, _NDy, _NDz; //Domain decomposation Topo
   int _NMx, _NMy, _NMz; //Moduler Topo. definition in a sub-domain
   int _NCx, _NCy, _NCz; //CMFD Topo
-  int _NOx, _NOy, _NOz; //Reaction rate output Topo
   int _num_threads; //Number of OpenMP threads
   double _azim_spacing;
   int _num_azim;
@@ -173,6 +172,11 @@ struct Runtime_Parametres {
   bool _verbose_report;
   bool _time_report;
   int _quadraturetype;
+  
+  std::vector<int> _output_types; //output reaction types for both uniform and non-uniform
+  
+  std::vector<std::vector<int>> _output_mesh_lattices; //uniform lattice output
+  
   Vector3D _mesh_lattice_widths; //widths of multiple output meshes with non-uniform lattice
   std::vector<std::vector<double>> _mesh_lattice_offsets; //offsets of multiple output meshes with non-uniform lattice
 

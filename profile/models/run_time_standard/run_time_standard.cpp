@@ -87,14 +87,7 @@ int main(int argc, char* argv[]) {
     case(3): quad = new EqualWeightPolarQuad(); break;
     case(4): quad = new EqualAnglePolarQuad(); break;
   }
-enum quadratureType {
-  TABUCHI_YAMAMOTO,
-  LEONARD,
-  GAUSS_LEGENDRE,
-  EQUAL_WEIGHT,
-  EQUAL_ANGLE
-  };
-    new EqualWeightPolarQuad();
+
   quad->setNumAzimAngles(runtime._num_azim);
   quad->setNumPolarAngles(runtime._num_polar);
   TrackGenerator3D track_generator(geometry, runtime._num_azim, runtime._num_polar, runtime._azim_spacing,
@@ -123,20 +116,30 @@ enum quadratureType {
     solver->printTimerReport();
 
   /* Extract reaction rates */
-  Mesh mesh(solver);
-  mesh.createLattice(runtime._NOx, runtime._NOy, runtime._NOz);
-  Vector3D rx_rates = mesh.getFormattedReactionRates(FISSION_RX);
-
   int my_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-  if (my_rank == 0) {
-    for (int k=0; k < rx_rates.at(0).at(0).size(); k++) {  //rx_rates.at(0).at(0).size()
-      //std::cout << " -------- z = " << k << " ----------" << std::endl;
-      for (int j=rx_rates.at(0).size()-1; j >= 0 ; j--) {
-        for (int i=0; i < rx_rates.size(); i++) {
-          std::cout << rx_rates.at(i).at(j).at(k) << " ";
+  std::string rxtype[4] = {"FISSION_RX", "TOTAL_RX", "ABSORPTION_RX", "FLUX_RX"};
+                          
+
+  for(int m=0; m< runtime._output_mesh_lattices.size(); m++) {
+    Mesh mesh(solver);
+    mesh.createLattice(runtime._output_mesh_lattices[m][0], 
+                       runtime._output_mesh_lattices[m][1], 
+                       runtime._output_mesh_lattices[m][2]);
+    Vector3D rx_rates = mesh.getFormattedReactionRates((RxType)runtime._output_types[m]);
+      
+    if (my_rank == 0) {
+      std::cout << "reaction type: " << rxtype[runtime._output_types[m]]
+                << ", lattice: " << runtime._output_mesh_lattices[m][0] << ","
+                << runtime._output_mesh_lattices[m][1] << ","
+                << runtime._output_mesh_lattices[m][2] << std::endl;
+      for (int k=0; k < rx_rates.at(0).at(0).size(); k++) {  
+        for (int j=rx_rates.at(0).size()-1; j >= 0 ; j--) {
+          for (int i=0; i < rx_rates.size(); i++) {
+            std::cout << rx_rates.at(i).at(j).at(k) << " ";
+          }
+          std::cout << std::endl;
         }
-        std::cout << std::endl;
       }
     }
   }

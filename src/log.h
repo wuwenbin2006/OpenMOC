@@ -174,10 +174,9 @@ struct Runtime_Parametres {
   int _quadraturetype;
   
   std::vector<int> _output_types; //output reaction types for both uniform and non-uniform
-  
   std::vector<std::vector<int>> _output_mesh_lattices; //uniform lattice output
   
-  Vector3D _mesh_lattice_widths; //widths of multiple output meshes with non-uniform lattice
+  Vector3D _non_uniform_mesh_lattices; //widths and offsets of multiple output meshes with non-uniform lattice
   std::vector<std::vector<double>> _mesh_lattice_offsets; //offsets of multiple output meshes with non-uniform lattice
 
 };

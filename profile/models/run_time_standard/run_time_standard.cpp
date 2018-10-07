@@ -71,7 +71,8 @@ int main(int argc, char* argv[]) {
     log_printf(ERROR, "No geometry file is provided");
   geometry->loadFromFile(runtime._geo_filename, false); 
 #ifdef MPIx
-  geometry->setDomainDecomposition(runtime._NDx, runtime._NDy, runtime._NDz, MPI_COMM_WORLD); 
+  geometry->setDomainDecomposition(runtime._NDx, runtime._NDy, runtime._NDz, 
+                                   MPI_COMM_WORLD); 
   geometry->setNumDomainModules(runtime._NMx, runtime._NMy, runtime._NMz);
 #endif
   geometry->setCmfd(cmfd);
@@ -90,11 +91,13 @@ int main(int argc, char* argv[]) {
 
   quad->setNumAzimAngles(runtime._num_azim);
   quad->setNumPolarAngles(runtime._num_polar);
-  TrackGenerator3D track_generator(geometry, runtime._num_azim, runtime._num_polar, runtime._azim_spacing,
+  TrackGenerator3D track_generator(geometry, runtime._num_azim, 
+                                   runtime._num_polar, runtime._azim_spacing,
                                    runtime._polar_spacing);
   track_generator.setNumThreads(num_threads);
   track_generator.setQuadrature(quad);
-  track_generator.setSegmentFormation((segmentationType)runtime._segmentation_type);
+  track_generator.setSegmentFormation((segmentationType)
+                                      runtime._segmentation_type);
   if(!runtime._seg_zones.empty())
     track_generator.setSegmentationZones(runtime._seg_zones);
   track_generator.generateTracks();
@@ -126,13 +129,39 @@ int main(int argc, char* argv[]) {
     mesh.createLattice(runtime._output_mesh_lattices[m][0], 
                        runtime._output_mesh_lattices[m][1], 
                        runtime._output_mesh_lattices[m][2]);
-    Vector3D rx_rates = mesh.getFormattedReactionRates((RxType)runtime._output_types[m]);
+    Vector3D rx_rates = mesh.getFormattedReactionRates
+                        ((RxType)runtime._output_types[m]);
       
     if (my_rank == 0) {
-      std::cout << "reaction type: " << rxtype[runtime._output_types[m]]
+      std::cout << "Output " << m << ", reaction type: " 
+                << rxtype[runtime._output_types[m]]
                 << ", lattice: " << runtime._output_mesh_lattices[m][0] << ","
                 << runtime._output_mesh_lattices[m][1] << ","
                 << runtime._output_mesh_lattices[m][2] << std::endl;
+      for (int k=0; k < rx_rates.at(0).at(0).size(); k++) {  
+        for (int j=rx_rates.at(0).size()-1; j >= 0 ; j--) {
+          for (int i=0; i < rx_rates.size(); i++) {
+            std::cout << rx_rates.at(i).at(j).at(k) << " ";
+          }
+          std::cout << std::endl;
+        }
+      }
+    }
+  }
+
+  for(int m=0; m<runtime._non_uniform_mesh_lattices.size(); m++) {
+    Mesh mesh(solver);
+    Vector3D rx_rates = mesh.getFormattedReactionRates
+        (runtime._non_uniform_mesh_lattices[m], 
+        (RxType)runtime._output_types[m+runtime._output_mesh_lattices.size()]);
+    if (my_rank == 0) {
+       std::cout <<"Output " << m+runtime._output_mesh_lattices.size() 
+        << ", reaction type: " 
+        << rxtype[runtime._output_types[m+runtime._output_mesh_lattices.size()]]
+        << ", lattice: " 
+        << runtime._non_uniform_mesh_lattices[m][0].size() << ","
+        << runtime._non_uniform_mesh_lattices[m][1].size() << ","
+        << runtime._non_uniform_mesh_lattices[m][2].size() << std::endl;
       for (int k=0; k < rx_rates.at(0).at(0).size(); k++) {  
         for (int j=rx_rates.at(0).size()-1; j >= 0 ; j--) {
           for (int i=0; i < rx_rates.size(); i++) {

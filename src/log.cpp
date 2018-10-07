@@ -844,6 +844,26 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
       arg_index++;
       RP._quadraturetype = atoi(argv[arg_index++]);
     } 
+    else if(strcmp(argv[arg_index], "-non_uniform_output") == 0) {
+      arg_index++;
+      char *buf = argv[arg_index];
+      char *outer_ptr = NULL;
+      char *inner_ptr = NULL;
+      char *p;
+      std::vector<std::vector<double>> widths_offset;
+      while((p = strtok_r(buf, "/", &outer_ptr)) != NULL) {
+        buf = p;
+        std::vector<double> tmp;
+        while((p = strtok_r(buf, ",", &inner_ptr)) != NULL) {
+          tmp.push_back(atof(p));
+          buf = NULL;
+        }
+        widths_offset.push_back(tmp);
+        buf = NULL;
+      }
+      RP._non_uniform_mesh_lattices.push_back(widths_offset);
+      arg_index++;
+    }  
     else {
       arg_index++;
     }
@@ -907,6 +927,8 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
            "                          2 - ABSORPTION_RX\n"
            "                          3 - FLUX_RX\n"
           );
+    
+    printf("-non_uniform_output     : set the XYZ widths and offset of non_uniform lattice for reaction output\n");
     printf("\n");
   }
   

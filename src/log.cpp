@@ -754,8 +754,15 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
       char *buf = argv[arg_index];
       char *outer_ptr = NULL;
       char *p;
+      char *ql, *qr;
       while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
-        RP._cell_widths_x.push_back(atof(p));
+        ql = strtok_r(p, "*", &qr);
+        if(strcmp(qr, "")) {
+          for(int i=0; i< atoi(qr); i++)
+            RP._cell_widths_x.push_back(atof(ql));
+        }
+        else 
+          RP._cell_widths_x.push_back(atof(p));
         buf = NULL;
       }
       arg_index++;
@@ -765,8 +772,15 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
       char *buf = argv[arg_index];
       char *outer_ptr = NULL;
       char *p;
+      char *ql, *qr;
       while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
-        RP._cell_widths_y.push_back(atof(p));
+        ql = strtok_r(p, "*", &qr);
+        if(strcmp(qr, "")) {
+          for(int i=0; i< atoi(qr); i++)
+            RP._cell_widths_y.push_back(atof(ql));
+        }
+        else 
+          RP._cell_widths_y.push_back(atof(p));
         buf = NULL;
       }
       arg_index++;      
@@ -776,8 +790,15 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
       char *buf = argv[arg_index];
       char *outer_ptr = NULL;
       char *p;
+      char *ql, *qr;
       while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
-        RP._cell_widths_z.push_back(atof(p));
+        ql = strtok_r(p, "*", &qr);
+        if(strcmp(qr, "")) {
+          for(int i=0; i< atoi(qr); i++)
+            RP._cell_widths_z.push_back(atof(ql));
+        }
+        else 
+          RP._cell_widths_z.push_back(atof(p));
         buf = NULL;
       }
       arg_index++;
@@ -791,8 +812,15 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
       char *buf = argv[arg_index];
       char *outer_ptr = NULL;
       char *p;
+      char *ql, *qr;
       while((p = strtok_r(buf, ",", &outer_ptr)) != NULL) {
-        RP._seg_zones.push_back(atof(p));
+        ql = strtok_r(p, "*", &qr);
+        if(strcmp(qr, "")) {
+          for(int i=0; i< atoi(qr); i++)
+            RP._seg_zones.push_back(atof(ql));
+        }
+        else 
+          RP._seg_zones.push_back(atof(p));
         buf = NULL;
       }
       arg_index++;
@@ -821,9 +849,16 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
       char *p;
       while((p = strtok_r(buf, "/", &outer_ptr)) != NULL) {
         buf = p;
+        char *ql, *qr;
         std::vector<int> tmp;
         while((p = strtok_r(buf, ",", &inner_ptr)) != NULL) {
-          tmp.push_back(atoi(p));
+          ql = strtok_r(p, "-", &qr);
+          if(strcmp(qr, "")) {
+            for(int i=atoi(ql); i<= atoi(qr); i++)
+              tmp.push_back(i);
+          }
+          else 
+            tmp.push_back(atoi(p));
           buf = NULL;
         }
         
@@ -853,9 +888,16 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
       std::vector<std::vector<double>> widths_offset;
       while((p = strtok_r(buf, "/", &outer_ptr)) != NULL) {
         buf = p;
+        char *ql, *qr;
         std::vector<double> tmp;
         while((p = strtok_r(buf, ",", &inner_ptr)) != NULL) {
-          tmp.push_back(atof(p));
+          ql = strtok_r(p, "*", &qr);
+          if(strcmp(qr, "")) {
+            for(int i=0; i< atoi(qr); i++)
+              tmp.push_back(atof(ql));
+          }
+          else 
+            tmp.push_back(atof(p));
           buf = NULL;
         }
         widths_offset.push_back(tmp);

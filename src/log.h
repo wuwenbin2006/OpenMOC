@@ -153,7 +153,8 @@ struct Runtime_Parametres {
   int _knearest; //the order of knearest update
   bool _CMFD_flux_update_on;//CMFD flux update
   bool _CMFD_centroid_update_on; //CMFD_centroid_update or conventional update
-  bool _use_axial_interpolation; //whether to use axial interpolation for CMFD update
+  /* whether to use axial interpolation for CMFD update*/
+  bool _use_axial_interpolation; 
   char* _log_filename; //Log file name
   std::string _geo_filename; //Geometry file name
   
@@ -174,11 +175,17 @@ struct Runtime_Parametres {
   bool _time_report;
   int _quadraturetype;
   
-  std::vector<int> _output_types; //output reaction types for both uniform and non-uniform
-  std::vector<std::vector<int>> _output_mesh_lattices; //uniform lattice output
-  Vector3D _non_uniform_mesh_lattices; //widths and offsets of multiple output meshes with non-uniform lattice
+  /* output reaction types for both uniform and non-uniform */
+  std::vector<int> _output_types; 
+  /* uniform lattice output */
+  std::vector<std::vector<int>> _output_mesh_lattices; 
+  /* widths and offsets of multiple output meshes with non-uniform lattice */
+  Vector3D _non_uniform_mesh_lattices; 
 };
 
+/**
+ * @brief Process the run time options
+ */
 int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]);
 
 #endif /* LOG_H_ */

@@ -919,57 +919,80 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
   if ((print_usage) && (myid == 0)) {
     printf("Usage: %s [<options>], default value in ()\n", argv[0]);
     printf("\n");
+    
+    printf("General parameters\n");
     printf("-debug                  : (0) or 1, stuck in infinite while loop\n");
+    printf("-log_level              : (NORMAL)\n");
     printf("-domain_decompose       : (1,1,1) domain decomposation Topo\n");
     printf("-num_domain_modules     : (1,1,1) modular Topo in a domain\n");
-    printf("-CMFD_lattice           : (1,1,1)CMFD lattice Topo\n");
-    printf("-output_mesh_lattice    : (0,0,0)reaction output mesh lattice\n");
     printf("-num_threads            : (1) Number of OpenMP threads to use\n");
+    printf("-log_file_name          : (NULL) the file name of the log file\n");
+    printf("-geo_file_name          : (NULL) the file name of the geometry "
+           "file\n");
+    printf("\n");
+    
+    printf("Track generating parameters\n");
     printf("-azim_spacing           : (0.05)\n");
     printf("-num_azim               : (64)\n");
     printf("-polar_spacing          : (0.75)\n");
     printf("-num_polar              : (10)\n");
-    printf("-MOC_src_tolerance      : (1.0E-4) MOC source convergence tolerance\n");
-    printf("-MOC_src_residual_type  : (1-FISSION_SOURCE) 0-SCALAR_FLUX, 1-FISSION_SOURCE, 2-TOTAL_SOURCE\n");
+    printf("-seg_zones              : (null) set the segmentation zones\n");
+    printf("-segmentation_type      : (3-OTF_STACKS) 0-EXPLICIT_2D, "
+           "1-EXPLICIT_3D, 2-OTF_TRACKS, 3-OTF_STACKS \n");
+    printf("-quadraturetype         : (2 - GAUSS_LEGENDRE) is default value\n"
+           "                           0 - TABUCHI_YAMAMOTO\n"
+           "                           1 - LEONARD\n"
+           "                           2 - GAUSS_LEGENDRE\n"
+           "                           3 - EQUAL_WEIGHT\n"
+           "                           4 - EQUAL_ANGLE\n"
+          );
+    printf("\n");
 
-    
-    printf("-max_iters              : (40) Max. Number of outter iterations\n");
-    printf("-log_level              : (NORMAL)\n");
-    printf("-knearest               : (1) knearest CMFD update\n");
+    printf("CMFD parameters\n");
+    printf("-CMFD_group_structure   : (No group condensation) set CMFD group "
+           "structure with ',' and '/' \n");
+    printf("-CMFD_lattice           : (1,1,1)Uniform CMFD lattice Topo\n");
+    printf("-widths_x               : (NULL) the widths of non-uniform CMFD "
+           "meshes in x direction\n");
+    printf("-widths_y               : (NULL) the widths of non-uniform CMFD "
+           "meshes in y direction\n");
+    printf("-widths_z               : (NULL) the widths of non-uniform CMFD "
+           "meshes in z direction\n");
     printf("-CMFD_flux_update_on    : (1)switch of the CMFD update\n");
-    printf("-CMFD_centroid_update_on: (1)switch of the CMFD knearest centroid update\n");
-    printf("-use_axial_interpolation: (0)switch of the CMFD axial interpolation update\n");
+    printf("-knearest               : (1) knearest CMFD update\n");
+    printf("-CMFD_centroid_update_on: (1)switch of the CMFD knearest "
+           "centroid update\n");
+    printf("-use_axial_interpolation: (0)switch of the CMFD axial interpolation"
+           " update\n");
     printf("-SOR_factor             : (1.0)set CMFD SOR relaxation factor\n");
     printf("-CMFD_relaxation_factor : (1.0)set CMFD relaxation factor\n");
-    printf("-CMFD_group_structure   : (No group condensation) set CMFD group structure with ',' and '/' \n");
+    printf("\n");
 
-
-    printf("-log_file_name          : (NULL) the file name of the log file\n");
-    printf("-geo_file_name          : (NULL) the file name of the geometry file\n");
-    printf("-widths_x               : (null) the widths of non-uniform CMFD meshes in x direction\n");
-    printf("-widths_y               : (null) the widths of non-uniform CMFD meshes in y direction\n");
-    printf("-widths_z               : (null) the widths of non-uniform CMFD meshes in z direction\n");
+    printf("MOC solver parameters\n");
     printf("-ls_solver              : (1) set the linear source solver\n");
-    printf("-seg_zones              : (null) set the segmentation zones\n");
-    printf("-segmentation_type      : (3-OTF_STACKS) 0-EXPLICIT_2D, 1-EXPLICIT_3D, 2-OTF_TRACKS, 3-OTF_STACKS \n");
-    
-    printf("-verbose_report         : (1)switch of the verbose iteration report\n");
+    printf("-max_iters              : (40) Max. Number of outter iterations\n");
+    printf("-MOC_src_residual_type  : (1-FISSION_SOURCE) 0-SCALAR_FLUX, "
+           "1-FISSION_SOURCE, 2-TOTAL_SOURCE\n");
+    printf("-MOC_src_tolerance      : (1.0E-4) MOC source convergence "
+           "tolerance\n");
+    printf("\n");
+
+    printf("Output parameters\n");
+    printf("-output_mesh_lattice    : (0,0,0)Uniform reaction output mesh "
+           "lattice\n");
+    printf("-non_uniform_output     : set the XYZ widths and offset of "
+           "non_uniform lattice for reaction output\n");
+    printf("-output_type            : (0 - FISSION_RX) set the output reaction "
+           "types\n"
+           "                           0 - FISSION_RX\n"
+           "                           1 - TOTAL_RX\n"
+           "                           2 - ABSORPTION_RX\n"
+           "                           3 - FLUX_RX\n"
+          );
+    printf("-verbose_report         : (1)switch of the verbose iteration "
+           "report\n");
     printf("-time_report            : (1)switch of the time report\n");
-    printf("-quadraturetype         : (2 - GAUSS_LEGENDRE) is default value\n"
-           "                          0 - TABUCHI_YAMAMOTO\n"
-           "                          1 - LEONARD\n"
-           "                          2 - GAUSS_LEGENDRE\n"
-           "                          3 - EQUAL_WEIGHT\n"
-           "                          4 - EQUAL_ANGLE\n"
-          );
-    printf("-output_type            : (0 - FISSION_RX) set the output reaction types\n"
-           "                          0 - FISSION_RX\n"
-           "                          1 - TOTAL_RX\n"
-           "                          2 - ABSORPTION_RX\n"
-           "                          3 - FLUX_RX\n"
-          );
-    
-    printf("-non_uniform_output     : set the XYZ widths and offset of non_uniform lattice for reaction output\n");
+
     printf("\n");
   }
   

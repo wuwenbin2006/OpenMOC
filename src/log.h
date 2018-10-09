@@ -125,6 +125,9 @@ std::string create_multiline_msg(std::string level, std::string message);
 void log_set_ranks(MPI_Comm comm);
 #endif
 
+/**
+ * @brief Structure for run time options
+ */
 struct Runtime_Parametres {
   Runtime_Parametres() : _debug_flag(false), _NDx(1), _NDy(1), _NDz(1),
     _NMx(1), _NMy(1), _NMz(1), _NCx(1), _NCy(1), _NCz(1), 
@@ -134,9 +137,7 @@ struct Runtime_Parametres {
     _use_axial_interpolation(false), _log_filename(NULL), _linear_solver(true),
     _MOC_src_residual_type(1), _SOR_factor(1.0), _CMFD_relaxation_factor(1.0),
     _segmentation_type(3), _verbose_report(true), _time_report(true),
-    _quadraturetype(2)
-    
-    {}
+    _quadraturetype(2) {}
   bool _debug_flag; //To debug or not when running, dead while loop
   int _NDx, _NDy, _NDz; //Domain decomposation Topo
   int _NMx, _NMy, _NMz; //Moduler Topo. definition in a sub-domain
@@ -175,10 +176,7 @@ struct Runtime_Parametres {
   
   std::vector<int> _output_types; //output reaction types for both uniform and non-uniform
   std::vector<std::vector<int>> _output_mesh_lattices; //uniform lattice output
-  
   Vector3D _non_uniform_mesh_lattices; //widths and offsets of multiple output meshes with non-uniform lattice
-  std::vector<std::vector<double>> _mesh_lattice_offsets; //offsets of multiple output meshes with non-uniform lattice
-
 };
 
 int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]);

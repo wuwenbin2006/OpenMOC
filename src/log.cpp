@@ -619,7 +619,9 @@ void log_set_ranks(MPI_Comm comm) {
 }
 #endif
 
-
+/**
+ * @brief Process the run time options
+ */
 int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
   
   int arg_index = 0;
@@ -691,51 +693,51 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
     }
     else if(strcmp(argv[arg_index], "-num_threads") == 0 ) {
       arg_index++;
-      RP._num_threads=atoi(argv[arg_index++]);
+      RP._num_threads = atoi(argv[arg_index++]);
     }
     else if(strcmp(argv[arg_index], "-azim_spacing") == 0) {
       arg_index++;
-      RP._azim_spacing=atof(argv[arg_index++]);
+      RP._azim_spacing = atof(argv[arg_index++]);
     }
     else if(strcmp(argv[arg_index], "-num_azim") == 0) {
       arg_index++;
-      RP._num_azim=atoi(argv[arg_index++]);
+      RP._num_azim = atoi(argv[arg_index++]);
     }
     else if(strcmp(argv[arg_index], "-polar_spacing") == 0) {
       arg_index++;
-      RP._polar_spacing=atof(argv[arg_index++]);
+      RP._polar_spacing = atof(argv[arg_index++]);
     }
     else if(strcmp(argv[arg_index], "-num_polar") == 0) {
       arg_index++;
-      RP._num_polar=atoi(argv[arg_index++]);
+      RP._num_polar = atoi(argv[arg_index++]);
     }
     else if(strcmp(argv[arg_index], "-MOC_src_tolerance") == 0) {
       arg_index++;
-      RP._tolerance=atof(argv[arg_index++]);
+      RP._tolerance = atof(argv[arg_index++]);
     }
     else if(strcmp(argv[arg_index], "-max_iters") == 0) {
       arg_index++;
-      RP._max_iters=atoi(argv[arg_index++]);
+      RP._max_iters= atoi(argv[arg_index++]);
     }
     else if(strcmp(argv[arg_index], "-log_level") == 0) {
       arg_index++;
-      RP._log_level=argv[arg_index++];
+      RP._log_level = argv[arg_index++];
     }
     else if(strcmp(argv[arg_index], "-knearest") == 0) {
       arg_index++;
-      RP._knearest=atoi(argv[arg_index++]);
+      RP._knearest = atoi(argv[arg_index++]);
     }
     else if(strcmp(argv[arg_index], "-CMFD_flux_update_on") == 0) {
       arg_index++;
-      RP._CMFD_flux_update_on=atoi(argv[arg_index++]);
+      RP._CMFD_flux_update_on = atoi(argv[arg_index++]);
     }
     else if(strcmp(argv[arg_index], "-CMFD_centroid_update_on") == 0) {
       arg_index++;
-      RP._CMFD_centroid_update_on=atoi(argv[arg_index++]);
+      RP._CMFD_centroid_update_on = atoi(argv[arg_index++]);
     } 
     else if(strcmp(argv[arg_index], "-use_axial_interpolation") == 0) {
       arg_index++;
-      RP._use_axial_interpolation=atoi(argv[arg_index++]);
+      RP._use_axial_interpolation = atoi(argv[arg_index++]);
     } 
     else if(strcmp(argv[arg_index], "-help") == 0) {
       print_usage = 1;
@@ -911,13 +913,10 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
     }
   }
   int myid;
-  //-num_threads 2 -azim_spacing 0.05 -num_azim 16 -polar_spacing 1.0 -num_polar 6 -tolerance 1.0e-5 \
-  //-max_iters 40 -log_level DEBUG -knearest 3 -CMFD_flux_update_on 1 -CMFD_centroid_update_on 1
 #ifdef MPIx
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 #endif
   if ((print_usage) && (myid == 0)) {
-    printf("\nRuntime_Parametres usage To be fixup\n");
     printf("Usage: %s [<options>], default value in ()\n", argv[0]);
     printf("\n");
     printf("-debug                  : (0) or 1, stuck in infinite while loop\n");

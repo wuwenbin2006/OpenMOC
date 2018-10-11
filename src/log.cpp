@@ -926,7 +926,7 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
     printf("-domain_decompose       : (1,1,1) domain decomposation Topo\n");
     printf("-num_domain_modules     : (1,1,1) modular Topo in a domain\n");
     printf("-num_threads            : (1) Number of OpenMP threads to use\n");
-    printf("-log_file_name          : (NULL) the file name of the log file\n");
+    printf("-log_filename           : (NULL) the file name of the log file\n");
     printf("-geo_file_name          : (NULL) the file name of the geometry "
            "file\n");
     printf("\n");

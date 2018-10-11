@@ -35,7 +35,8 @@ int main(int argc, char* argv[]) {
   #endif
 
   /* Set logging information */
-  set_log_filename(runtime._log_filename);
+  if(runtime._log_filename)
+    set_log_filename(runtime._log_filename);
   set_log_level(runtime._log_level);
   set_line_length(120);
 

@@ -622,7 +622,7 @@ void log_set_ranks(MPI_Comm comm) {
 /**
  * @brief Process the run time options
  */
-int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
+int setRuntimeParametres(RuntimeParametres &RP, int argc, char *argv[]) {
   
   int arg_index = 0;
   int print_usage = 0;
@@ -923,7 +923,7 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
     printf("General parameters\n");
     printf("-debug                  : (0) or 1, stuck in infinite while loop\n");
     printf("-log_level              : (NORMAL)\n");
-    printf("-domain_decompose       : (1,1,1) domain decomposation Topo\n");
+    printf("-domain_decompose       : (1,1,1) domain decomposation structure\n");
     printf("-num_domain_modules     : (1,1,1) modular Topo in a domain\n");
     printf("-num_threads            : (1) Number of OpenMP threads to use\n");
     printf("-log_filename           : (NULL) the file name of the log file\n");
@@ -951,7 +951,7 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
     printf("CMFD parameters\n");
     printf("-CMFD_group_structure   : (No group condensation) set CMFD group "
            "structure with ',' and '/' \n");
-    printf("-CMFD_lattice           : (1,1,1)Uniform CMFD lattice Topo\n");
+    printf("-CMFD_lattice           : (0,0,0)Uniform CMFD lattice structure\n");
     printf("-widths_x               : (NULL) the widths of non-uniform CMFD "
            "meshes in x direction\n");
     printf("-widths_y               : (NULL) the widths of non-uniform CMFD "
@@ -970,7 +970,8 @@ int set_Runtime_Parametres(Runtime_Parametres &RP, int argc, char *argv[]) {
 
     printf("MOC solver parameters\n");
     printf("-ls_solver              : (1) set the linear source solver\n");
-    printf("-max_iters              : (40) Max. Number of outter iterations\n");
+    printf("-max_iters              : (1000) Maximum number of outter "
+           "iterations\n");
     printf("-MOC_src_residual_type  : (1-FISSION_SOURCE) 0-SCALAR_FLUX, "
            "1-FISSION_SOURCE, 2-TOTAL_SOURCE\n");
     printf("-MOC_src_tolerance      : (1.0E-4) MOC source convergence "

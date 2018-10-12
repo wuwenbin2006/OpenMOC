@@ -20,8 +20,8 @@ int main(int argc, char* argv[]) {
     arg_index++;
   }
   
-  Runtime_Parametres runtime;
-  set_Runtime_Parametres(runtime, argc, argv);
+  RuntimeParametres runtime;
+  setRuntimeParametres(runtime, argc, argv);
   
   /* stuck here for debug tools to attach */
   while (runtime._debug_flag) ;
@@ -46,25 +46,6 @@ int main(int argc, char* argv[]) {
   log_printf(NORMAL, "Polar spacing = %f", runtime._polar_spacing);
   log_printf(NORMAL, "Polar angles = %d", runtime._num_polar);
 
-  /* Create CMFD mesh */
-  log_printf(NORMAL, "Creating CMFD mesh...");
-  Cmfd* cmfd = new Cmfd();
-  cmfd->setSORRelaxationFactor(runtime._SOR_factor);
-  cmfd->setCMFDRelaxationFactor(runtime._CMFD_relaxation_factor);
-  if(runtime._cell_widths_x.empty() || runtime._cell_widths_y.empty() ||
-      runtime._cell_widths_z.empty()) 
-    cmfd->setLatticeStructure(runtime._NCx, runtime._NCy, runtime._NCz);
-  else {
-    std::vector< std::vector<double> > cmfd_widths{runtime._cell_widths_x, 
-        runtime._cell_widths_y, runtime._cell_widths_z};
-    cmfd->setWidths(cmfd_widths);
-  }
-  if(!runtime._CMFD_group_structure.empty())
-    cmfd->setGroupStructure(runtime._CMFD_group_structure);
-  cmfd->setKNearest(runtime._knearest);
-  cmfd->setCentroidUpdateOn(runtime._CMFD_centroid_update_on);
-  cmfd->useAxialInterpolation(runtime._use_axial_interpolation);
-
   /* Create the geometry */
   log_printf(NORMAL, "Creating geometry...");
   Geometry *geometry = new Geometry();
@@ -76,7 +57,32 @@ int main(int argc, char* argv[]) {
                                    MPI_COMM_WORLD); 
   geometry->setNumDomainModules(runtime._NMx, runtime._NMy, runtime._NMz);
 #endif
-  geometry->setCmfd(cmfd);
+  
+  if((runtime._NCx >0 && runtime._NCy > 0 && runtime._NCz > 0) ||
+      (!runtime._cell_widths_x.empty() && !runtime._cell_widths_y.empty() &&
+       !runtime._cell_widths_z.empty())) {
+    /* Create CMFD mesh */
+    log_printf(NORMAL, "Creating CMFD mesh...");
+    Cmfd* cmfd = new Cmfd();
+    cmfd->setSORRelaxationFactor(runtime._SOR_factor);
+    cmfd->setCMFDRelaxationFactor(runtime._CMFD_relaxation_factor);
+    if(runtime._cell_widths_x.empty() || runtime._cell_widths_y.empty() ||
+        runtime._cell_widths_z.empty()) 
+      cmfd->setLatticeStructure(runtime._NCx, runtime._NCy, runtime._NCz);
+    else {
+      std::vector< std::vector<double> > cmfd_widths{runtime._cell_widths_x, 
+          runtime._cell_widths_y, runtime._cell_widths_z};
+      cmfd->setWidths(cmfd_widths);
+    }
+    if(!runtime._CMFD_group_structure.empty())
+      cmfd->setGroupStructure(runtime._CMFD_group_structure);
+    cmfd->setKNearest(runtime._knearest);
+    cmfd->setCentroidUpdateOn(runtime._CMFD_centroid_update_on);
+    cmfd->useAxialInterpolation(runtime._use_axial_interpolation);
+    
+    geometry->setCmfd(cmfd);
+  }
+
   geometry->initializeFlatSourceRegions();
 
   /* Generate tracks */

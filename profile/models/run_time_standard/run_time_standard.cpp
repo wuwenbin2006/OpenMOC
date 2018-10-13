@@ -2,6 +2,7 @@
 #include "../../../src/CPULSSolver.h"
 #include "../../../src/log.h"
 #include "../../../src/Mesh.h"
+#include "../../../src/RunTime.h"
 #include <array>
 #include <iostream>
 

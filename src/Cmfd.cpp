@@ -3359,6 +3359,12 @@ void Cmfd::initializeLattice(Point* offset) {
     _cell_width_y = _width_y / _num_y;
     _cell_width_z = _width_z / _num_z;
     
+    /* 2D case */
+    if(_width_z == std::numeric_limits<double>::infinity()) {
+      _cell_width_z = 1.0;
+      _width_z = 1.0;
+    }
+    
     _cell_widths_x.resize(_num_x,_cell_width_x);
     _cell_widths_y.resize(_num_y,_cell_width_y);
     _cell_widths_z.resize(_num_z,_cell_width_z);

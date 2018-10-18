@@ -302,10 +302,6 @@ void Cmfd::setNumZ(int num_z) {
   _local_num_zn = _local_num_z;
   if (_domain_communicator != NULL)
     _local_num_z = _num_z / _domain_communicator->_num_domains_z;
-
-  if (_width_z == std::numeric_limits<double>::infinity()) {
-    _cell_width_z = 1.0;
-  }
 }
 
 
@@ -3363,6 +3359,8 @@ void Cmfd::initializeLattice(Point* offset) {
     if(_width_z == std::numeric_limits<double>::infinity()) {
       _cell_width_z = 1.0;
       _width_z = 1.0;
+      setBoundary(SURFACE_Z_MIN, REFLECTIVE);
+      setBoundary(SURFACE_Z_MAX, REFLECTIVE);
     }
     
     _cell_widths_x.resize(_num_x,_cell_width_x);
@@ -4905,7 +4903,7 @@ void Cmfd::setWidths(std::vector< std::vector<double> > widths) {
   _non_uniform = true;
   _cell_widths_x = widths[0];
   _cell_widths_y = widths[1];
-  _cell_widths_z = widths[2]; 
+  _cell_widths_z = widths[2];
 }
 
 /**

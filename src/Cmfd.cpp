@@ -3356,18 +3356,20 @@ void Cmfd::initializeLattice(Point* offset) {
     _cell_width_z = _width_z / _num_z;
     
     /* 2D case */
-    if(_width_z == std::numeric_limits<double>::infinity()) {
+    if(_width_z == std::numeric_limits<double>::infinity())
       _cell_width_z = 1.0;
-      _width_z = 1.0;
-      setBoundary(SURFACE_Z_MIN, REFLECTIVE);
-      setBoundary(SURFACE_Z_MAX, REFLECTIVE);
-    }
     
     _cell_widths_x.resize(_num_x,_cell_width_x);
     _cell_widths_y.resize(_num_y,_cell_width_y);
     _cell_widths_z.resize(_num_z,_cell_width_z);
   }
 
+  /* 2D case */
+  if(_width_z == std::numeric_limits<double>::infinity()) {
+    _width_z = 1.0;
+    setBoundary(SURFACE_Z_MIN, REFLECTIVE);
+    setBoundary(SURFACE_Z_MAX, REFLECTIVE);
+  }
   _accumulate_x.resize(_num_x+1,0.0);
   _accumulate_y.resize(_num_y+1,0.0);
   _accumulate_z.resize(_num_z+1,0.0);
@@ -4897,13 +4899,16 @@ void Cmfd::recordNetCurrents() {
  */
 void Cmfd::setWidths(std::vector< std::vector<double> > widths) {
   
-  if(widths.size() != 3) 
-    log_printf(ERROR, "Widths of THREE directions must be provided");
+  if(widths.size() == 3) 
+    _cell_widths_z = widths[2];
+  else if(widths.size() == 2)
+    _cell_widths_z.push_back(1.0);
+  else  
+    log_printf(ERROR, "widths must have dimension 2 or 3");
   
   _non_uniform = true;
   _cell_widths_x = widths[0];
   _cell_widths_y = widths[1];
-  _cell_widths_z = widths[2];
 }
 
 /**

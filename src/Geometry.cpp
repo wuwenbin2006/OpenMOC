@@ -3429,8 +3429,10 @@ std::vector<double> Geometry::getUniqueZPlanes() {
 /**
  * @brief Prints all Geoemetry and Material details to a Geometry restart file
  * @param filename The name of the file where the data is printed
+ * @param non_uniform Whether the non-uniform lattice is used to create geometry
+ *        This is to make the code compatible with old version of .geo file
  */
-void Geometry::dumpToFile(std::string filename) {
+void Geometry::dumpToFile(std::string filename, bool non_uniform_lattice) {
 
   FILE* out;
   out = fopen(filename.c_str(), "w");
@@ -3715,10 +3717,6 @@ void Geometry::dumpToFile(std::string filename) {
       double width_y = lattice->getWidthY();
       double width_z = lattice->getWidthZ();
       double* offset = lattice->getOffset()->getXYZ();
-      bool non_uniform = lattice->getNonUniform();
-      const std::vector<double> widths_x = lattice->getWidthsX();
-      const std::vector<double> widths_y = lattice->getWidthsY();
-      const std::vector<double> widths_z = lattice->getWidthsZ();
       fwrite(&num_x, sizeof(int), 1, out);
       fwrite(&num_y, sizeof(int), 1, out);
       fwrite(&num_z, sizeof(int), 1, out);
@@ -3726,10 +3724,16 @@ void Geometry::dumpToFile(std::string filename) {
       fwrite(&width_y, sizeof(double), 1, out);
       fwrite(&width_z, sizeof(double), 1, out);
       fwrite(offset, sizeof(double), 3, out);
-      fwrite(&non_uniform, sizeof(bool), 1, out);
-      fwrite(&widths_x[0], sizeof(double), num_x, out);
-      fwrite(&widths_y[0], sizeof(double), num_y, out);
-      fwrite(&widths_z[0], sizeof(double), num_z, out);
+      if(non_uniform_lattice) {
+        bool non_uniform = lattice->getNonUniform();
+        const std::vector<double> widths_x = lattice->getWidthsX();
+        const std::vector<double> widths_y = lattice->getWidthsY();
+        const std::vector<double> widths_z = lattice->getWidthsZ();
+        fwrite(&non_uniform, sizeof(bool), 1, out);
+        fwrite(&widths_x[0], sizeof(double), num_x, out);
+        fwrite(&widths_y[0], sizeof(double), num_y, out);
+        fwrite(&widths_z[0], sizeof(double), num_z, out);
+      }
 
       /* Get universes */
       Universe* universes[num_x * num_y * num_z];
@@ -3757,7 +3761,8 @@ void Geometry::dumpToFile(std::string filename) {
  * @brief Loads all Geoemetry and Material details from a Geometry restart file
  * @param filename The name of the file where the data is loaded
  */
-void Geometry::loadFromFile(std::string filename, bool twiddle) {
+void Geometry::loadFromFile(std::string filename, bool non_uniform_lattice,
+                            bool twiddle) {
 
   _twiddle = twiddle;
   _loaded_from_file = true;
@@ -4067,12 +4072,16 @@ void Geometry::loadFromFile(std::string filename, bool twiddle) {
       ret = twiddleRead(&width_z, sizeof(double), 1, in);
       ret = twiddleRead(offset, sizeof(double), 3, in);
       
-      bool non_uniform;
-      std::vector<double> widths_x(num_x), widths_y(num_y), widths_z(num_z);
-      ret = twiddleRead(&non_uniform, sizeof(bool), 1, in);
-      ret = twiddleRead(&widths_x[0], sizeof(double), num_x, in);
-      ret = twiddleRead(&widths_y[0], sizeof(double), num_y, in);
-      ret = twiddleRead(&widths_z[0], sizeof(double), num_z, in);
+      std::vector<double> widths_x(num_x, width_x), widths_y(num_y, width_y), 
+                          widths_z(num_z, width_x);
+      bool non_uniform = false;
+      
+      if(non_uniform_lattice) {
+        ret = twiddleRead(&non_uniform, sizeof(bool), 1, in);
+        ret = twiddleRead(&widths_x[0], sizeof(double), num_x, in);
+        ret = twiddleRead(&widths_y[0], sizeof(double), num_y, in);
+        ret = twiddleRead(&widths_z[0], sizeof(double), num_z, in);
+      }
       
       std::vector<double> accum_x(num_x+1,0);
       std::vector<double> accum_y(num_y+1,0);

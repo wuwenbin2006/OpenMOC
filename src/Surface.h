@@ -54,7 +54,10 @@ enum surfaceType {
   ZPLANE,
 
   /** A generalized quadratic surface */
-  QUADRATIC
+  QUADRATIC,
+  
+  /** A Sphere surface */
+  SPHERE
 };
 
 
@@ -192,8 +195,8 @@ public:
 
   bool isPointOnSurface(Point* point);
   bool isCoordOnSurface(LocalCoords* coord);
-  double getMinDistance(Point* point, double azim, double polar=M_PI_2);
-  double getMinDistance(LocalCoords* coord);
+  virtual double getMinDistance(Point* point, double azim, double polar=M_PI_2);
+  virtual double getMinDistance(LocalCoords* coord);
 
   /**
    * @brief Converts this Surface's attributes to a character array.
@@ -385,6 +388,50 @@ public:
 
 
 /**
+ * @class Sphere Surface.h "src/Surface.h"
+ * @brief Represents a Sphere with origin and radius.
+ */
+class Sphere: public Surface {
+
+private:
+
+  /** A point for the Sphere's center */
+  Point _center;
+
+  /** The Sphere's radius */
+  double _radius;
+
+  /** The Sphere is a friend of the Surface class */
+  friend class Surface;
+
+  /** The Sphere is a friend of the Plane class */
+  friend class Plane;
+
+public:
+  Sphere(const double x, const double y, const double z, const double radius,
+         const int id=0, const char* name="");
+
+  double getX0();
+  double getY0();
+  double getZ0();
+  double getRadius();
+  double getMinX(int halfspace);
+  double getMaxX(int halfspace);
+  double getMinY(int halfspace);
+  double getMaxY(int halfspace);
+  double getMinZ(int halfspace);
+  double getMaxZ(int halfspace);
+
+  double evaluate(const Point* point) const;
+  int intersection(Point* point, double azim, double polar, Point* points);
+  double getMinDistance(Point* point, double azim, double polar=M_PI_2);
+  double getMinDistance(LocalCoords* coord);
+
+  std::string toString();
+};
+
+
+/**
  * @brief Finds the minimum distance to a Surface.
  * @details Finds the miniumum distance to a Surface from a Point with a
  *          given trajectory defined by an azim/polar to this Surface. If the
@@ -443,7 +490,7 @@ inline double Plane::evaluate(const Point* point) const {
  * @return the radius of the ZCylinder
  */
 inline double ZCylinder::getRadius() {
-  return this->_radius;
+  return _radius;
 }
 
 
@@ -459,4 +506,23 @@ inline double ZCylinder::evaluate(const Point* point) const {
 }
 
 
+/**
+ * @brief Return the radius of the Sphere.
+ * @return the radius of the Sphere
+ */
+inline double Sphere::getRadius() {
+  return _radius;
+}
+
+/**
+ * @brief Evaluate a Point using the Sphere's Surface equation.
+ * @param point a pointer to the Point of interest
+ * @return the value of Point in the equation
+ */
+inline double Sphere::evaluate(const Point* point) const {
+  double x = point->getX() - _center.getX();
+  double y = point->getY() - _center.getY();
+  double z = point->getZ() - _center.getZ();
+  return (x*x + y*y + z*z - _radius*_radius);
+}
 #endif /* SURFACE_H_ */

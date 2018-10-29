@@ -285,30 +285,7 @@ double Surface::getMinDistance(LocalCoords* coords) {
   double phi = coords->getPhi();
   double polar = coords->getPolar();
 
-  /* Point array for intersections with this Surface */
-  Point intersections[2];
-
-  /* Find the intersection Point(s) */
-  int num_inters = this->intersection(point, phi, polar, intersections);
-  double distance = INFINITY;
-
-  /* If there is one intersection Point */
-  if (num_inters == 1)
-    distance = intersections[0].distanceToPoint(point);
-
-  /* If there are two intersection Points */
-  else if (num_inters == 2) {
-    double dist1 = intersections[0].distanceToPoint(point);
-    double dist2 = intersections[1].distanceToPoint(point);
-
-    /* Determine which intersection Point is nearest */
-    if (dist1 < dist2)
-      distance = dist1;
-    else
-      distance = dist2;
-  }
-
-  return distance;
+  return getMinDistance(point, phi, polar);
 }
 
 
@@ -749,7 +726,7 @@ std::string ZPlane::toString() {
 
 /**
  * @brief constructor.
- * @param x the x-coordinte of the ZCylinder center
+ * @param x the x-coordinate of the ZCylinder center
  * @param y the y-coordinate of the ZCylinder center
  * @param radius the radius of the ZCylinder
  * @param id the optional Surface ID
@@ -1108,6 +1085,235 @@ std::string ZCylinder::toString() {
          << ", C = " << _C << ", D = " << _D << ", E = " << _E
          << ", x0 = " << _center.getX()
          << ", y0 = " << _center.getY()
+         << ", radius = " << _radius;
+
+    return string.str();
+}
+
+
+/**
+ * @brief constructor.
+ * @param x the x-coordinate of the Sphere center
+ * @param y the y-coordinate of the Sphere center
+ * @param z the z-coordinate of the Sphere center
+ * @param radius the radius of the Sphere
+ * @param id the optional Surface ID
+ * @param name the optional Surface name
+ */
+Sphere::Sphere(const double x, const double y, const double z, 
+               const double radius, const int id, const char* name):
+  Surface(id, name) {
+
+  _surface_type = SPHERE;
+  _radius = radius;
+  _center.setX(x);
+  _center.setY(y);
+  _center.setZ(z);
+}
+
+
+/**
+ * @brief Return the x-coordinate of the Sphere's center Point.
+ * @return the x-coordinate of the Sphere center
+ */
+double Sphere::getX0() {
+  return _center.getX();
+}
+
+
+/**
+ * @brief Return the y-coordinate of the Sphere's center Point.
+ * @return the y-coordinate of the Sphere center
+ */
+double Sphere::getY0() {
+  return _center.getY();
+}
+
+
+/**
+ * @brief Return the z-coordinate of the Sphere's center Point.
+ * @return the z-coordinate of the Sphere center
+ */
+double Sphere::getZ0() {
+  return _center.getZ();
+}
+
+
+/**
+ * @brief Returns the minimum x value for one of this Sphere's halfspaces.
+ * @param halfspace the halfspace of the Sphere to consider
+ * @return the minimum x value
+ */
+double Sphere::getMinX(int halfspace) {
+  if (halfspace == -1)
+    return _center.getX() - _radius;
+  else
+    return -std::numeric_limits<double>::infinity();
+}
+
+
+/**
+ * @brief Returns the maximum x value for one of this Sphere's halfspaces.
+ * @param halfspace the halfspace of the Sphere to consider
+ * @return the maximum x value
+ */
+double Sphere::getMaxX(int halfspace) {
+  if (halfspace == -1)
+    return _center.getX() + _radius;
+  else
+    return std::numeric_limits<double>::infinity();
+}
+
+
+/**
+ * @brief Returns the minimum y value for one of this Sphere's halfspaces.
+ * @param halfspace the halfspace of the Sphere to consider
+ * @return the minimum y value
+ */
+double Sphere::getMinY(int halfspace) {
+  if (halfspace == -1)
+    return _center.getY() - _radius;
+  else
+    return -std::numeric_limits<double>::infinity();
+}
+
+
+/**
+ * @brief Returns the maximum y value for one of this Sphere's halfspaces.
+ * @param halfspace the halfspace of the Sphere to consider
+ * @return the maximum y value
+ */
+double Sphere::getMaxY(int halfspace) {
+  if (halfspace == -1)
+    return _center.getY() + _radius;
+  else
+    return std::numeric_limits<double>::infinity();
+}
+
+
+/**
+ * @brief Returns the minimum z value of -INFINITY.
+ * @param halfspace the halfspace of the Sphere to consider
+ * @return the minimum z value of -INFINITY
+ */
+double Sphere::getMinZ(int halfspace) {
+  if (halfspace == -1)
+    return _center.getZ() - _radius;
+  else
+    return -std::numeric_limits<double>::infinity();
+}
+
+
+/**
+ * @brief Returns the maximum z value of INFINITY.
+ * @param halfspace the halfspace of the Sphere to consider
+ * @return the maximum z value of INFINITY
+ */
+double Sphere::getMaxZ(int halfspace) {
+  if (halfspace == -1)
+    return _center.getZ() + _radius;
+  else
+    return std::numeric_limits<double>::infinity();
+}
+
+/**
+ * @brief For Sphere, there is acctually no need to implement intersection. Just 
+ *        for vitual use.
+ */
+int Sphere::intersection(Point* point, double azim, double polar, Point* points){
+  
+  log_printf(NORMAL, "For Sphere, there is no need to implement intersection");
+  return 0;
+}
+
+/**
+ * @brief Finds the minimum distance to a Sphere.
+ * @details Finds the miniumum distance to a Sphere from a Point with a
+ *          given trajectory defined by an azim/polar to this Sphere. If the
+ *          trajectory will not intersect the Surface, returns INFINITY. This 
+ *          function model is from OpenMC/src/surface.cpp.
+ * @param point a pointer to the Point of interest
+ * @param azim the azimuthal angle defining the trajectory in radians
+ * @param polar the polar angle defining the trajectory in radians
+ * @param intersection a pointer to a Point for storing the intersection
+ * @return the minimum distance to the Sphere
+ */
+double Sphere::getMinDistance(Point* point, double azim, double polar) {
+
+  const double x = point->getX() - _center.getX();
+  const double y = point->getY() - _center.getY();
+  const double z = point->getZ() - _center.getZ();
+  const double wx = sin(polar) * cos(azim);
+  const double wy = sin(polar) * sin(azim);
+  const double wz = cos(polar);
+  const double k = x*wx + y*wy + z*wz;
+  const double c = x*x + y*y + z*z - _radius*_radius;
+  const double quad = k*k - c;
+  
+  if (quad < 0.0) {
+    /* No intersection with sphere. */
+    return std::numeric_limits<double>::infinity();
+  } 
+  else if (std::abs(c) < FLT_EPSILON) {
+    /* point is on the sphere, thus one distance is positive/negative and
+     the other is zero. The sign of k determines if we are facing in or out. */
+    if (k >= 0.0)
+      return std::numeric_limits<double>::infinity();
+    else
+      return -k + sqrt(quad);
+  } 
+  else if (c < 0.0) {
+    /* point is inside the sphere, thus one distance must be negative and
+       one must be positive. The positive distance will be the one with
+       negative sign on sqrt(quad) */
+    return -k + sqrt(quad);
+  } 
+  else {
+    /* point is outside the sphere, thus both distances are either positive
+       or negative. If positive, the smaller distance is the one with positive
+       sign on sqrt(quad). */
+    const double d = -k - sqrt(quad);
+    if (d < 0.0) 
+      return std::numeric_limits<double>::infinity();
+    return d;
+  }
+}
+
+
+/**
+ * @brief Finds the minimum distance to a Surface.
+ * @details Finds the miniumum distance to a Surface from a LocalCoords
+ *          with a trajectory defined by an angle to this Surface. If the
+ *          trajectory will not intersect the Surface, returns INFINITY.
+ * @param coords a pointer to a localcoords object
+ * @return the minimum distance to the Surface
+ */
+double Sphere::getMinDistance(LocalCoords* coords) {
+
+  Point* point = coords->getPoint();
+  double phi = coords->getPhi();
+  double polar = coords->getPolar();
+
+  return getMinDistance(point, phi, polar);
+}
+
+
+/**
+ * @brief Converts this Sphere's attributes to a character array.
+ * @details The character array returned conatins the type of Plane (ie,
+ *          ZCYLINDER) and the centre point and radius of the Sphere
+ * @return a character array of this Sphere's attributes
+ */
+std::string Sphere::toString() {
+
+  std::stringstream string;
+
+  string << "Surface ID = " << _id
+         << ", name = " << _name
+         << ", type = SPHERE "
+         << ", x0 = " << _center.getX()
+         << ", y0 = " << _center.getY()
+         << ", z0 = " << _center.getZ()
          << ", radius = " << _radius;
 
     return string.str();

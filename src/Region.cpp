@@ -158,9 +158,8 @@ double Region::getMinX() {
   else if(_region_type == UNION)
     min_x = +std::numeric_limits<double>::infinity();
   else if(_region_type == COMPLEMENT) {
-    log_printf(WARNING, "getMinX() is not implemented for complement regions,"
-               " min x of region complemented returned.");
-    min_x = -std::numeric_limits<double>::infinity();
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMinX();
   }
 
   /* Loop over all nodes in the Region */
@@ -189,9 +188,8 @@ double Region::getMaxX() {
   else if(_region_type == UNION)
     max_x = -std::numeric_limits<double>::infinity();
   else if(_region_type == COMPLEMENT) {
-    log_printf(WARNING, "getMaxX() is not implemented for complement regions,"
-               " max x of region complemented returned.");
-    max_x = +std::numeric_limits<double>::infinity();
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMaxX();
   }
 
   /* Loop over all nodes in the Region */
@@ -220,9 +218,8 @@ double Region::getMinY() {
   else if(_region_type == UNION)
     min_y = +std::numeric_limits<double>::infinity();
   else if(_region_type == COMPLEMENT) {
-    log_printf(WARNING, "getMinY() is not implemented for complement regions,"
-               " min y of region complemented returned.");
-    min_y = -std::numeric_limits<double>::infinity();
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMinY();
   }
 
   /* Loop over all nodes in the Region */
@@ -251,9 +248,8 @@ double Region::getMaxY() {
   else if(_region_type == UNION)
     max_y = -std::numeric_limits<double>::infinity();
   else if(_region_type == COMPLEMENT) {
-    log_printf(WARNING, "getMaxY() is not implemented for complement regions,"
-               " max y of region complemented returned.");
-    max_y = +std::numeric_limits<double>::infinity();
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMaxY();
   }
 
   /* Loop over all nodes in the Region */
@@ -282,9 +278,8 @@ double Region::getMinZ() {
   else if(_region_type == UNION)
     min_z = +std::numeric_limits<double>::infinity();
   else if(_region_type == COMPLEMENT) {
-    log_printf(WARNING, "getMinZ() is not implemented for complement regions,"
-               " min z of region complemented returned.");
-    min_z = -std::numeric_limits<double>::infinity();
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMinZ();
   }
 
   /* Loop over all nodes in the Region */
@@ -313,9 +308,8 @@ double Region::getMaxZ() {
   else if(_region_type == UNION)
     max_z = -std::numeric_limits<double>::infinity();
   else if(_region_type == COMPLEMENT) {
-    log_printf(WARNING, "getMaxZ() is not implemented for complement regions,"
-               " max z of region complemented returned.");
-    max_z = +std::numeric_limits<double>::infinity();
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMaxZ();
   }
 
   /* Loop over all nodes in the Region */
@@ -344,9 +338,10 @@ boundaryType Region::getMinXBoundaryType() {
     min_x = -std::numeric_limits<double>::infinity();
   else if(_region_type == UNION)
     min_x = +std::numeric_limits<double>::infinity();
-  else if(_region_type == COMPLEMENT)
-    log_printf(ERROR, "getMinXBoundaryType() is not implemented for complement "
-               "regions");
+  else if(_region_type == COMPLEMENT) {
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMinXBoundaryType();
+  }
 
   /* Loop over all nodes in the Region */
   std::vector<Region*>::iterator iter;
@@ -383,9 +378,10 @@ boundaryType Region::getMaxXBoundaryType() {
     max_x = +std::numeric_limits<double>::infinity();
   else if(_region_type == UNION)
     max_x = -std::numeric_limits<double>::infinity();
-  else if(_region_type == COMPLEMENT)
-    log_printf(ERROR, "getMaxXBoundaryType() is not implemented for complement "
-               "regions");
+  else if(_region_type == COMPLEMENT) {
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMaxXBoundaryType();
+  }
 
   /* Loop over all nodes in the Region */
   std::vector<Region*>::iterator iter;
@@ -422,9 +418,10 @@ boundaryType Region::getMinYBoundaryType() {
     min_y = -std::numeric_limits<double>::infinity();
   else if(_region_type == UNION)
     min_y = +std::numeric_limits<double>::infinity();
-  else if(_region_type == COMPLEMENT)
-    log_printf(ERROR, "getMinYBoundaryType() is not implemented for complement "
-               "regions");
+  else if(_region_type == COMPLEMENT) {
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMinYBoundaryType();
+  }
 
   /* Loop over all nodes in the Region */
   std::vector<Region*>::iterator iter;
@@ -461,9 +458,10 @@ boundaryType Region::getMaxYBoundaryType() {
     max_y = +std::numeric_limits<double>::infinity();
   else if(_region_type == UNION)
     max_y = -std::numeric_limits<double>::infinity();
-  else if(_region_type == COMPLEMENT)
-    log_printf(ERROR, "getMaxYBoundaryType() is not implemented for complement "
-               "regions");
+  else if(_region_type == COMPLEMENT) {
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMaxYBoundaryType();
+  }
 
   /* Loop over all nodes in the Region */
   std::vector<Region*>::iterator iter;
@@ -500,9 +498,10 @@ boundaryType Region::getMinZBoundaryType() {
     min_z = -std::numeric_limits<double>::infinity();
   else if(_region_type == UNION)
     min_z = +std::numeric_limits<double>::infinity();
-  else if(_region_type == COMPLEMENT)
-    log_printf(ERROR, "getMinZBoundaryType() is not implemented for complement "
-               "regions");
+  else if(_region_type == COMPLEMENT) {
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMinZBoundaryType();
+  }
 
   /* Loop over all nodes in the Region */
   std::vector<Region*>::iterator iter;
@@ -539,9 +538,10 @@ boundaryType Region::getMaxZBoundaryType() {
     max_z = +std::numeric_limits<double>::infinity();
   else if(_region_type == UNION)
     max_z = -std::numeric_limits<double>::infinity();
-  else if(_region_type == COMPLEMENT)
-    log_printf(ERROR, "getMaxZBoundaryType() is not implemented for complement "
-               "regions");
+  else if(_region_type == COMPLEMENT) {
+    Complement* complement = dynamic_cast<Complement *>(this);
+    return complement->getEquivalent()->getMaxZBoundaryType();
+  }
 
   /* Loop over all nodes in the Region */
   std::vector<Region*>::iterator iter;
@@ -697,8 +697,65 @@ bool Union::containsPoint(Point* point) {
 /**
  * @brief Constructor sets the type of Region (COMPLEMENT).
  */
-Complement::Complement() : Region() {
+Complement::Complement(Region* node) : Region() {
   _region_type = COMPLEMENT;
+  _equivalent = NULL;
+  if(node != NULL)
+    addNode(node);
+}
+
+
+/**
+ * @brief Destructor delete the equivalent Region.
+ */
+Complement::~Complement() {
+  if(_equivalent)
+    delete _equivalent;
+}
+
+/**
+ * @brief Get the equivalent Region of a Complement. If not exist, calculate and 
+          return the equivalent Region, else just return the equivalent Region.
+ * @return _equivalent the equivalent Region
+ */
+Region* Complement::getEquivalent() {
+
+  if(_equivalent)
+    return _equivalent;
+  
+  Region* node = getNodes().at(0);
+  if(node->getRegionType() == COMPLEMENT)
+    /* opposite of the node*/
+    _equivalent = node->getNodes().at(0)->clone();
+  
+  else if(node->getRegionType() == HALFSPACE)
+    /* opposite of the Halfspace node*/
+    _equivalent = new Halfspace(-dynamic_cast<Halfspace*>(node)->getHalfspace() 
+                                ,dynamic_cast<Halfspace*>(node)->getSurface());
+  
+  else if(node->getRegionType() == INTERSECTION) {
+    /* Complement of an Intersection is an Union of the Complement nodes */
+    _equivalent = new Union();
+    std::vector<Region*> nodes = node->getNodes();
+    std::vector<Region*>::iterator iter;
+    for(iter = nodes.begin(); iter != nodes.end(); iter++) {
+      Complement *complement = new Complement(*iter);
+      _equivalent->addNode(complement);
+    }
+  }
+
+  else if(node->getRegionType() == UNION) {
+    /* Complement of an Union is an Intersection of the Complement nodes */
+    _equivalent = new Intersection();
+    std::vector<Region*> nodes = node->getNodes();
+    std::vector<Region*>::iterator iter;
+    for(iter = nodes.begin(); iter != nodes.end(); iter++) {
+      Complement *complement = new Complement(*iter);
+      _equivalent->addNode(complement);
+    }
+  }
+
+  return _equivalent;
 }
 
 

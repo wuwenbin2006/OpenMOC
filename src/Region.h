@@ -115,11 +115,17 @@ public:
  * @brief A complement of a Region.
  */
 class Complement : public Region {
-
+protected:
+  /* Complement could always be quivalent to a Union, an Intersection, or the 
+     opposite of a Complement or a Halfspace */
+  Region* _equivalent;
+  
 public:
-  Complement();
+  Complement(Region* node = NULL);
+  ~Complement();
   void addNode(Region* node, bool clone=true);
   bool containsPoint(Point* point);
+  Region* getEquivalent();
 };
 
 /**

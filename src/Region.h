@@ -59,6 +59,7 @@ public:
 
   /* Functions for constructing the Region / other Regions */
   virtual void addNode(Region* node, bool clone=true);
+  virtual void addNodes(std::vector<Region*> nodes, bool clone=true);
   void removeHalfspace(Surface* surface, int halfspace);
   regionType getRegionType();
   void setParentRegion(Region* node);
@@ -95,7 +96,7 @@ public:
 class Intersection : public Region {
 
 public:
-  Intersection();
+  Intersection(std::vector<Region*> nodes = std::vector<Region*>());
   bool containsPoint(Point* point);
 };
 
@@ -106,7 +107,7 @@ public:
 class Union : public Region {
 
 public:
-  Union();
+  Union(std::vector<Region*> nodes = std::vector<Region*>());
   bool containsPoint(Point* point);
 };
 

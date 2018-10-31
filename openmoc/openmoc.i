@@ -137,6 +137,7 @@ namespace std {
   %template(LongVector) vector<long>;
   %template(Array) vector< vector<int> >;
   %template(DoubleArray) vector< vector<double> >;
+  %template(ReagionVector) vector< Region* >;
 }
 
 /* Include the MPI library */

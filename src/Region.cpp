@@ -34,6 +34,25 @@ void Region::addNode(Region* node, bool clone) {
 
 
 /**
+ * @brief Add an array of nodes to the Region.
+ * @details NOTE: This method deep copies the Regions and stores
+ *          the copy. Any changes made to the Regions will not be
+ *          reflected in the Regions copy stored by the Regions.
+ *          The clone boolean can be used to avoid this behavior.
+ * @param nodes An array of Region nodes to add to this Region
+ * @param clone whether to clone or not the node when adding it
+ */
+void Region::addNodes(std::vector<Region*> nodes, bool clone) {
+  
+  if(!nodes.empty()) {
+    for(int i=0; i< nodes.size(); i++) {
+      addNode(nodes[i], clone);
+    }
+  }
+}
+
+
+/**
  * @brief Removes a Node from this Region.
  * @details //FIXME Does not handle complex CSG cells, only intersections
  * @param surface the surface of Halfspace to remove
@@ -640,10 +659,12 @@ Region* Region::clone() {
 
 
 /**
- * @brief Constructor sets the type of Region (INTERSECTION).
+ * @brief Constructor sets the type of Region (INTERSECTION), add initial Region
+ *        nodes to the Intersection.
  */
-Intersection::Intersection() {
+Intersection::Intersection(std::vector<Region*> nodes) : Region() {
   _region_type = INTERSECTION;
+  addNodes(nodes);
 }
 
 
@@ -668,10 +689,12 @@ bool Intersection::containsPoint(Point* point) {
 
 
 /**
- * @brief Constructor sets the type of Region (UNION).
+ * @brief Constructor sets the type of Region (UNION), add initial Region
+ *        nodes to the Union.
  */
-Union::Union() : Region() {
+Union::Union(std::vector<Region*> nodes) : Region() {
   _region_type = UNION;
+  addNodes(nodes);
 }
 
 

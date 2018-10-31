@@ -87,6 +87,7 @@ public:
   virtual double minSurfaceDist(Point* point, double azim, double polar=M_PI_2);
   virtual double minSurfaceDist(LocalCoords* coords);
   virtual Region* clone();
+  virtual std::string toString() = 0;
 };
 
 /**
@@ -98,6 +99,7 @@ class Intersection : public Region {
 public:
   Intersection(std::vector<Region*> nodes = std::vector<Region*>());
   bool containsPoint(Point* point);
+  std::string toString();
 };
 
 /**
@@ -109,6 +111,7 @@ class Union : public Region {
 public:
   Union(std::vector<Region*> nodes = std::vector<Region*>());
   bool containsPoint(Point* point);
+  std::string toString();
 };
 
 /**
@@ -127,6 +130,7 @@ public:
   void addNode(Region* node, bool clone=true);
   bool containsPoint(Point* point);
   Region* getEquivalent();
+  std::string toString();
 };
 
 /**
@@ -164,6 +168,7 @@ public:
   bool containsPoint(Point* point);
   double minSurfaceDist(Point* point, double azim, double polar=M_PI_2);
   double minSurfaceDist(LocalCoords* coords);
+  std::string toString();
 };
 
 /**

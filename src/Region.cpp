@@ -689,6 +689,27 @@ bool Intersection::containsPoint(Point* point) {
 
 
 /**
+ * @brief Convert this Intersection's attributes to a string format.
+ * @return a character array of this Intersection's attributes
+ */
+std::string Intersection::toString() {
+
+  std::stringstream string;
+  /* Query each of the Intersection's nodes */
+  std::vector<Region*>::iterator iter;
+  string << "(";
+  for (iter = _nodes.begin(); iter != _nodes.end(); iter++)
+    if(iter == _nodes.begin())
+      string << (*iter)->toString();
+    else
+      string << " " << (*iter)->toString();
+  string << ")";
+  
+  return string.str();
+}
+
+
+/**
  * @brief Constructor sets the type of Region (UNION), add initial Region
  *        nodes to the Union.
  */
@@ -697,6 +718,26 @@ Union::Union(std::vector<Region*> nodes) : Region() {
   addNodes(nodes);
 }
 
+
+/**
+ * @brief Convert this Union's attributes to a string format.
+ * @return a character array of this Union's attributes
+ */
+std::string Union::toString() {
+
+  std::stringstream string;
+  /* Query each of the Union's nodes */
+  std::vector<Region*>::iterator iter;
+  string << "(";
+  for (iter = _nodes.begin(); iter != _nodes.end(); iter++)
+    if(iter == _nodes.begin())
+      string << (*iter)->toString();
+    else
+      string << " | " << (*iter)->toString();
+  string << ")";
+
+  return string.str();
+}
 
 /**
  * @brief Determines whether a Point is contained inside the Union.
@@ -735,6 +776,20 @@ Complement::~Complement() {
   if(_equivalent)
     delete _equivalent;
 }
+
+
+/**
+ * @brief Convert this Complement's attributes to a string format.
+ * @return a character array of this Complement's attributes
+ */
+std::string Complement::toString() {
+
+  std::stringstream string;
+  string << "~" << getNodes().at(0)->toString();
+  
+  return string.str();
+}
+
 
 /**
  * @brief Get the equivalent Region of a Complement. If not exist, calculate and 
@@ -1037,6 +1092,22 @@ double Halfspace::minSurfaceDist(Point* point, double azim, double polar) {
  */
 double Halfspace::minSurfaceDist(LocalCoords* coords) {
   return _surface->getMinDistance(coords);
+}
+
+
+/**
+ * @brief Convert this Halfspace's attributes to a string format.
+ * @return a character array of this Halfspace's attributes
+ */
+std::string Halfspace::toString() {
+  
+  std::stringstream string;
+  if(_halfspace ==1)
+    string << "+" << _surface->getId();
+  else
+    string << "-" << _surface->getId();
+  
+  return string.str();
 }
 
 

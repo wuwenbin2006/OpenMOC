@@ -479,6 +479,21 @@ void Universe::addCell(Cell* cell) {
 
 
 /**
+ * @brief Adds an array of Cells to this Universe.
+ * @details Stores the user-specified Cell IDs and Cell pointers in a std::map
+ *          along with all of other Cells added to this Universe.
+ * @param cells the array of Cell pointers
+ */
+void Universe::addCells(std::vector<Cell* > cells) {
+
+  if(cells.empty())
+    return;
+  for(int i=0; i< cells.size(); i++)
+    addCell(cells[i]);
+}
+
+
+/**
  * @brief Removes a Cell from this Universe's container of Cells.
  * @param cell a pointer to the Cell to remove
  */

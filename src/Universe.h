@@ -134,6 +134,7 @@ public:
   void setName(const char* name);
   void setType(universeType type);
   void addCell(Cell* cell);
+  void addCells(std::vector<Cell* > cells);
   void removeCell(Cell* cell);
 
   bool containsPoint(Point* point);

@@ -74,9 +74,17 @@
 %}
 
 %warnfilter(506) log_printf(logLevel level, const char *format, ...);
+%warnfilter(511) set_log_level;
 %warnfilter(511) swig::SwigPyIterator;
 %warnfilter(511) Cell::setFill;
+%warnfilter(511) Cell::minSurfaceDist;
+%warnfilter(511) Region::minSurfaceDist;
+%warnfilter(511) HalfSpace::minSurfaceDist;
+%warnfilter(511) Surface::getMinDistance;
 %warnfilter(511) std::vector;
+%warnfilter(511) std::vector<Region*>;
+%warnfilter(511) std::vector<Cell*>;
+// %warnfilter(511) ;
 
 /* Methods for SWIG to ignore in generating Python API */
 %ignore setFSRCentroid(int fsr, Point* centroid);
@@ -137,7 +145,8 @@ namespace std {
   %template(LongVector) vector<long>;
   %template(Array) vector< vector<int> >;
   %template(DoubleArray) vector< vector<double> >;
-  %template(ReagionVector) vector< Region* >;
+  %template(ReagionVector) vector<Region*>;
+  %template(CellVector) vector<Cell*>;
 }
 
 /* Include the MPI library */

@@ -61,6 +61,8 @@ struct fsr_data {
 
   /** Global numerical centroid in Root Universe */
   Point* _centroid;
+  
+  std::vector<long> _track_IDs;
 
   /** Destructor for fsr_data */
   ~fsr_data() {

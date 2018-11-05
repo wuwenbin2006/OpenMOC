@@ -1026,15 +1026,18 @@ void Solver::initializeCmfd() {
 
   /* Give CMFD number of FSRs and FSR property arrays */
   _cmfd->setSolve3D(_solve_3D);
+  _cmfd->setSolver(this);
   _cmfd->setNumFSRs(_num_FSRs);
   _cmfd->setFSRVolumes(_FSR_volumes);
   _cmfd->setFSRMaterials(_FSR_materials);
   _cmfd->setFSRFluxes(_scalar_flux);
+  _cmfd->setStartFlux(_start_flux);
   _cmfd->setFSRSources(_reduced_sources);
   _cmfd->setQuadrature(_quad);
   _cmfd->setGeometry(_geometry);
   _cmfd->setAzimSpacings(_quad->getAzimSpacings(), _num_azim);
   _cmfd->initialize();
+  setupFSRTrack();
 
 
   TrackGenerator3D* track_generator_3D =
@@ -2066,6 +2069,68 @@ void Solver::printInputParamsSummary() {
     log_printf(NORMAL, "CMFD acceleration: OFF");
   }
 }
+
+void Solver::setupFSRTrack() {
+  
+  LocalCoords* start_point;
+  LocalCoords* end_point;
+  double ox, oy, oz, azim, polar;// openmp risk?
+  long start_ID, end_ID;
+  
+  /* Get FSR vector maps */
+  ParallelHashMap<std::string, fsr_data*>& FSR_keys_map =
+    _geometry->getFSRKeysMap();
+  std::vector<std::string>& FSRs_to_keys = _geometry->getFSRsToKeys();
+  
+#pragma omp parallel for
+  for (long t=0; t<_tot_num_tracks; t++) {
+    
+    /* Get 3D Track data */
+    TrackStackIndexes tsi;
+    Track3D track;
+    TrackGenerator3D* track_generator_3D =
+      dynamic_cast<TrackGenerator3D*>(_track_generator);
+    track_generator_3D->getTSIByIndex(t, &tsi);
+    track_generator_3D->getTrackOTF(&track, &tsi);  
+  
+    /* Get the angle of Track */
+    azim = track.getPhi();
+    polar = track.getTheta();  
+    /* Get the start point */
+    ox = track.getStart()->getX() + cos(azim) * sin(polar) * TINY_MOVE;
+    oy = track.getStart()->getY() + sin(azim) * sin(polar) * TINY_MOVE;
+    oz = track.getStart()->getZ() + cos(polar) * TINY_MOVE;
+    start_point = new LocalCoords(ox, oy, oz, true);
+    start_point->setUniverse(_geometry->getRootUniverse());
+    
+    /* Get the end point */
+    ox = track.getEnd()->getX() - cos(azim) * sin(polar) * TINY_MOVE;
+    oy = track.getEnd()->getY() - sin(azim) * sin(polar) * TINY_MOVE;
+    oz = track.getEnd()->getZ() - cos(polar) * TINY_MOVE;
+    end_point = new LocalCoords(ox, oy, oz, true);
+    end_point->setUniverse(_geometry->getRootUniverse());
+    
+    /* Get the start and end FSR IDs */
+    _geometry->getRootUniverse()->findCell(start_point);
+    _geometry->getRootUniverse()->findCell(end_point);
+    start_ID = _geometry->getFSRId(start_point);
+    end_ID = _geometry->getFSRId(end_point);
+    
+    /* Push back the track ID and start(0) indicator to the start FSR*/
+    std::string key = FSRs_to_keys[start_ID];
+    FSR_keys_map.at(key)->_track_IDs.push_back(t*2);
+    
+    /* Push back the track ID and end(1) indicator to the end FSR*/
+    key = FSRs_to_keys[end_ID];
+    FSR_keys_map.at(key)->_track_IDs.push_back(t*2 +1);
+    
+    log_printf(DEBUG, "%s, startFSRID = %ld, endFSRID = %ld", 
+               track.toString().c_str(), start_ID, end_ID);
+    delete start_point;
+    delete end_point;
+  }
+}
+
 
 
 /**

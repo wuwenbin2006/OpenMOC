@@ -251,10 +251,8 @@ void CPUSolver::initializeFluxArrays() {
     log_printf(NORMAL, "Max boundary angular flux storage per domain = %6.2f "
                "MB", max_size_mb);
 
-    _boundary_flux = new float[size];
-    _start_flux = new float[size];
-    memset(_boundary_flux, 0., size * sizeof(float));
-    memset(_start_flux, 0., size * sizeof(float));
+    _boundary_flux = new float[size]();
+    _start_flux = new float[size]();
 
     /* Allocate memory for boundary leakage if necessary. CMFD is not set in
        solver at this point, so the value of _cmfd is always NULL as initial
@@ -403,14 +401,9 @@ void CPUSolver::zeroTrackFluxes() {
  *        for both the "forward" and "reverse" directions.
  */
 void CPUSolver::copyBoundaryFluxes() {
+  memcpy(_boundary_flux, _start_flux, 
+         sizeof(float)*2*_tot_num_tracks*_fluxes_per_track);
 
-#pragma omp parallel for schedule(guided)
-  for (long t=0; t < _tot_num_tracks; t++) {
-    for (int d=0; d < 2; d++) {
-      for (int pe=0; pe < _fluxes_per_track; pe++)
-        _boundary_flux(t,d,pe) = _start_flux(t, d, pe);
-    }
-  }
 }
 
 

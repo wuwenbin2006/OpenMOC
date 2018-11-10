@@ -1037,7 +1037,8 @@ void Solver::initializeCmfd() {
   _cmfd->setGeometry(_geometry);
   _cmfd->setAzimSpacings(_quad->getAzimSpacings(), _num_azim);
   _cmfd->initialize();
-  setupFSRTrack();
+  if(_solve_3D)
+    setupFSRTracks();
 
 
   TrackGenerator3D* track_generator_3D =
@@ -2070,19 +2071,24 @@ void Solver::printInputParamsSummary() {
   }
 }
 
-void Solver::setupFSRTrack() {
+
+/**
+ * @brief Set the Track IDs and direction to their related FSRs
+ */
+void Solver::setupFSRTracks() {
   
   LocalCoords* start_point;
   LocalCoords* end_point;
-  double ox, oy, oz, azim, polar;// openmp risk?
+  double ox, oy, oz, azim, polar;
   long start_ID, end_ID;
   
   /* Get FSR vector maps */
   ParallelHashMap<std::string, fsr_data*>& FSR_keys_map =
     _geometry->getFSRKeysMap();
+  
+  /* Get FSR to keys vector indexed by FSR IDs */
   std::vector<std::string>& FSRs_to_keys = _geometry->getFSRsToKeys();
   
-#pragma omp parallel for
   for (long t=0; t<_tot_num_tracks; t++) {
     
     /* Get 3D Track data */
@@ -2130,7 +2136,6 @@ void Solver::setupFSRTrack() {
     delete end_point;
   }
 }
-
 
 
 /**

@@ -27,6 +27,9 @@
 /** Forward declaration of Geometry class */
 class Geometry;
 
+/** Forward declaration of Solver class */
+class Solver;
+
 /** Comparator for sorting k-nearest stencil std::pair objects */
 inline bool stencilCompare(const std::pair<int, double>& firstElem,
                            const std::pair<int, double>& secondElem) {
@@ -330,6 +333,12 @@ private:
   /* Boolean to check if the domain communicator (for domain decomposed CMFD)
    * has been allocated */
   bool _domain_communicator_allocated;
+  
+  /* Starting angular fluxes of tracks at boundaries */
+  float* _start_flux;
+  
+  /* Pointer to Solver object */ 
+  Solver* _solver;
 
   /** A timer to record timing data for a simulation */
   Timer* _timer;
@@ -450,6 +459,8 @@ public:
   void setQuadrature(Quadrature* quadrature);
   void setKNearest(int k_nearest);
   void setSolve3D(bool solve_3d);
+  void setSolver(Solver *solver);
+  void setStartFlux(float *start_flux);
   void setAzimSpacings(double* azim_spacings, int num_azim);
   void setPolarSpacings(double** polar_spacings, int num_azim,
                         int num_polar);

@@ -62,6 +62,8 @@ struct fsr_data {
   /** Global numerical centroid in Root Universe */
   Point* _centroid;
   
+  /* IDs of the Tracks passing this FSR. Track ID and direction stored,
+     i.e. (2*trackID + direction) */
   std::vector<long> _track_IDs;
 
   /** Destructor for fsr_data */

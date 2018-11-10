@@ -1186,10 +1186,23 @@ void Cmfd::updateMOCFlux() {
 
   log_printf(INFO, "Updating MOC flux...");
 
+  int fluxes_per_track;
+  if (_solve_3D)
+    fluxes_per_track = _num_moc_groups;
+  else
+    fluxes_per_track = _num_moc_groups * _num_polar/2;
+  
   /* Set max prolongation factor */
   if (_convergence_data != NULL)
     _convergence_data->pf = 1.0;
-
+  
+  /* Get FSR vector maps */
+  ParallelHashMap<std::string, fsr_data*>& FSR_keys_map =
+    _geometry->getFSRKeysMap();
+  
+  /* Get FSR to keys vector indexed by FSR IDs */
+  std::vector<std::string>& FSRs_to_keys = _geometry->getFSRsToKeys();
+  
   /* Loop over mesh cells */
 #pragma omp parallel for
   for (int i = 0; i < _local_num_xn * _local_num_yn * _local_num_zn; i++) {
@@ -1205,6 +1218,10 @@ void Cmfd::updateMOCFlux() {
 
         /* Get the update ratio */
         CMFD_PRECISION update_ratio = getUpdateRatio(i, e, *iter);
+        
+        /* Get the TrackIDs of this FSR */
+        std::string& key = FSRs_to_keys[*iter];
+        std::vector<long>& track_IDs = FSR_keys_map.at(key)->_track_IDs;
 
         /* Limit the update ratio */
         if (update_ratio > 20.0)
@@ -1226,6 +1243,13 @@ void Cmfd::updateMOCFlux() {
             _flux_moments[(*iter)*3*_num_moc_groups + h*3] *= update_ratio;
             _flux_moments[(*iter)*3*_num_moc_groups + h*3 + 1] *= update_ratio;
             _flux_moments[(*iter)*3*_num_moc_groups + h*3 + 2] *= update_ratio;
+          }
+        
+          /* Update the boundary angular fluxes by flux update_ratio*/
+          for(int t=0; t<track_IDs.size(); t++) {
+            _start_flux[(track_IDs[t]/2)*2*fluxes_per_track \
+                        + (track_IDs[t]%2)*fluxes_per_track \
+                        + (h)] *= update_ratio;
           }
 
           log_printf(DEBUG, "Updating flux in FSR: %d, cell: %d, MOC group: "
@@ -2841,9 +2865,8 @@ CMFD_PRECISION Cmfd::getFluxRatio(int cell_id, int group, int fsr) {
 
   double* interpolants;
   double ratio = 1.0;
-  if (_use_axial_interpolation)
-    interpolants = _axial_interpolants.at(fsr);
   if (_use_axial_interpolation && _local_num_zn >= 3) {
+    interpolants = _axial_interpolants.at(fsr);
     int z_ind = cell_id / (_local_num_xn * _local_num_yn);
     int cell_mid = cell_id;
 
@@ -3691,6 +3714,24 @@ int Cmfd::getSense(int surface) {
  */
 void Cmfd::setSolve3D(bool solve_3D) {
   _solve_3D = solve_3D;
+}
+
+
+/** 
+ * @brief Set the Solver pointer to CMFD.
+ * @param goemetry A pointer to a Solver object.
+ */
+void Cmfd::setSolver(Solver *solver) {
+  _solver = solver;
+}
+
+
+/** 
+ * @brief Set the starting angular flux pointer to CMFD.
+ * @param goemetry A float pointer to the starting angular flux.
+ */
+void Cmfd::setStartFlux(float *start_flux) {
+  _start_flux = start_flux;
 }
 
 

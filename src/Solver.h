@@ -423,7 +423,7 @@ public:
   void printFissionRates(std::string fname, int nx, int ny, int nz);
   virtual void printInputParamsSummary();
 
-  void setupFSRTrack();
+  void setupFSRTracks();
   void setKeffFromNeutronBalance();
   void setResidualByReference(std::string fname);
   void dumpFSRFluxes(std::string fname);

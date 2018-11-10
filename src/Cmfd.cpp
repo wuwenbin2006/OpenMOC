@@ -35,6 +35,7 @@ Cmfd::Cmfd() {
   _flux_update_on = true;
   _centroid_update_on = true;
   _use_axial_interpolation = 0;
+  _boundary_angular_fluxes_update = 0;
   _flux_limiting = true;
   _balance_sigma_t = false;
   _k_nearest = 1;
@@ -1245,11 +1246,14 @@ void Cmfd::updateMOCFlux() {
             _flux_moments[(*iter)*3*_num_moc_groups + h*3 + 2] *= update_ratio;
           }
         
-          /* Update the boundary angular fluxes by flux update_ratio*/
-          for(int t=0; t<track_IDs.size(); t++) {
-            _start_flux[(track_IDs[t]/2)*2*fluxes_per_track \
-                        + (track_IDs[t]%2)*fluxes_per_track \
-                        + (h)] *= update_ratio;
+          if (_boundary_angular_fluxes_update) {
+            
+            /* Update the boundary angular fluxes by flux update_ratio*/
+            for(int t=0; t<track_IDs.size(); t++) {
+              _start_flux[(track_IDs[t]/2)*2*fluxes_per_track \
+                          + (track_IDs[t]%2)*fluxes_per_track \
+                          + (h)] *= update_ratio;
+            }
           }
 
           log_printf(DEBUG, "Updating flux in FSR: %d, cell: %d, MOC group: "
@@ -2376,6 +2380,26 @@ void Cmfd::useAxialInterpolation(int interpolate) {
     log_printf(NORMAL, "WARNING: Axial interpolation CMFD prolongation may only"
                " be effective when all the FSRs are axially homogeneous");
   _use_axial_interpolation = interpolate;
+}
+
+
+/**
+ * @brief Set the flag indicating whether to or the method to update the MOC 
+ *        boundary angular fluxes
+ * @param boundary_angular_fluxes_update Flag means No boundary update(0), 
+ *        update with flux ratio(1), update with current(2)
+ */
+void Cmfd::useBoundaryAngularFluxesUpdate(int boundary_angular_fluxes_update) {
+  _boundary_angular_fluxes_update = boundary_angular_fluxes_update;
+}
+
+
+/**
+ * @brief Get the flag indicating whether to or the method to update the MOC 
+ *        boundary angular fluxes
+ */
+int Cmfd::getBoundaryAngularFluxesUpdate() {
+  return _boundary_angular_fluxes_update;
 }
 
 

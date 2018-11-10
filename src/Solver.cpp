@@ -1037,7 +1037,7 @@ void Solver::initializeCmfd() {
   _cmfd->setGeometry(_geometry);
   _cmfd->setAzimSpacings(_quad->getAzimSpacings(), _num_azim);
   _cmfd->initialize();
-  if(_solve_3D)
+  if(_solve_3D && _cmfd->getBoundaryAngularFluxesUpdate() != 0)
     setupFSRTracks();
 
 

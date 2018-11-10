@@ -128,6 +128,10 @@ int setRuntimeParameters(RuntimeParameters &RP, int argc, char *argv[]) {
     else if(strcmp(argv[arg_index], "-use_axial_interpolation") == 0) {
       arg_index++;
       RP._use_axial_interpolation = atoi(argv[arg_index++]);
+    }
+    else if(strcmp(argv[arg_index], "-use_boundary_update") == 0) {
+      arg_index++;
+      RP._boundary_angular_fluxes_update = atoi(argv[arg_index++]);
     } 
     else if(strcmp(argv[arg_index], "-help") == 0 ||
             strcmp(argv[arg_index], "--help") == 0 ||
@@ -347,6 +351,7 @@ int setRuntimeParameters(RuntimeParameters &RP, int argc, char *argv[]) {
       "-knearest                2                                          \\\n"
       "-CMFD_centroid_update_on 1                                          \\\n"
       "-use_axial_interpolation 2                                          \\\n"
+      "-use_boundary_update     1                                          \\\n"
       "-SOR_factor              1.5                                        \\\n"
       "-CMFD_relaxation_factor  0.7                                        \\\n"
       "-ls_solver               1                                          \\\n"
@@ -416,6 +421,12 @@ int setRuntimeParameters(RuntimeParameters &RP, int argc, char *argv[]) {
            "                           1 - FSR axially averaged value\n"
            "                           2 - centroid z-coordinate evaluated "
            "value\n");
+    printf("-use_boundary_update    : (0) option of the CMFD boundary angular "
+           "fluxes update\n"
+           "                           0 - No boundary angular fluxes update\n"
+           "                           1 - update with fluxes ratio\n"
+           "                           2 - update with current ratio\n");
+
     printf("-SOR_factor             : (1.0) set CMFD SOR relaxation factor\n");
     printf("-CMFD_relaxation_factor : (1.0) set CMFD relaxation factor\n");
     printf("\n");

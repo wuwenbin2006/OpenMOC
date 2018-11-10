@@ -80,6 +80,7 @@ int main(int argc, char* argv[]) {
     cmfd->setKNearest(runtime._knearest);
     cmfd->setCentroidUpdateOn(runtime._CMFD_centroid_update_on);
     cmfd->useAxialInterpolation(runtime._use_axial_interpolation);
+    cmfd->useBoundaryAngularFluxesUpdate(runtime._boundary_angular_fluxes_update);
     
     geometry->setCmfd(cmfd);
   }

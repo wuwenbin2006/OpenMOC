@@ -46,7 +46,7 @@ struct RuntimeParameters {
     _MOC_src_residual_type(1), _SOR_factor(1.0), _CMFD_relaxation_factor(1.0),
     _segmentation_type(3), _verbose_report(true), _time_report(true),
     _log_level((char*)"NORMAL"),_quadraturetype(2), _test_run(false), 
-    _geo_version(0) {}
+    _geo_version(0), _boundary_angular_fluxes_update(0) {}
   
   /* To debug or not when running, dead while loop */
   bool _debug_flag;
@@ -93,6 +93,8 @@ struct RuntimeParameters {
   bool _CMFD_centroid_update_on;
   /* Whether to use axial interpolation for CMFD update */
   int _use_axial_interpolation; 
+  /* Flag indicating the method to update the MOC boundary angular fluxes*/
+  int _boundary_angular_fluxes_update;
   /* CMFD linear solver SOR factor */
   double _SOR_factor;
   /* CMFD relaxation factor */

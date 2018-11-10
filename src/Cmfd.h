@@ -269,6 +269,9 @@ private:
 
   /** Whether to use axial interpolation for flux update ratios */
   int _use_axial_interpolation;
+  
+  /** The method to update boundary start angular fluxes */
+  int _boundary_angular_fluxes_update;
 
   /** Axial interpolation constants */
   std::vector<double*> _axial_interpolants;
@@ -473,6 +476,8 @@ public:
 #endif
   void setConvergenceData(ConvergenceData* convergence_data);
   void useAxialInterpolation(int interpolate);
+  void useBoundaryAngularFluxesUpdate(int boundary_angular_fluxes_update);
+  int getBoundaryAngularFluxesUpdate();
   
   /* Methods to try to fix stability issues */
   void useFluxLimiting(bool flux_limiting);

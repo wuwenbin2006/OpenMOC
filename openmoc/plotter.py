@@ -279,7 +279,7 @@ def plot_segments(track_generator, get_figure=False, plot_3D=False):
 
 def plot_materials(geometry, gridsize=250, xlim=None, ylim=None, zlim=None,
                    plane='xy', offset=None, get_figure=False,
-                   library='matplotlib'):
+                   library='matplotlib', filename=''):
     """Plot a color-coded 2D surface plot of the materials in the geometry.
 
     The geometry must be initialized with materials, cells, universes and
@@ -305,6 +305,8 @@ def plot_materials(geometry, gridsize=250, xlim=None, ylim=None, zlim=None,
         Whether to return the Matplotlib figure (only if library='matplotlib')
     library : {'matplotlib', 'pil'}
         The plotting library to use
+    filename : String, optional
+        The prefix filename of the plot for savefig
 
     Returns
     -------
@@ -346,13 +348,16 @@ def plot_materials(geometry, gridsize=250, xlim=None, ylim=None, zlim=None,
     plot_params.suptitle = 'Materials'
     if plane == 'xy':
         plot_params.title = 'z = {0}'.format(plot_params.offset)
-        plot_params.filename = 'materials-z-{0}'.format(plot_params.offset)
+        plot_params.filename = filename + \
+        'materials-z-{0}'.format(plot_params.offset)
     elif plane == 'xz':
         plot_params.title = 'y = {0}'.format(plot_params.offset)
-        plot_params.filename = 'materials-y-{0}'.format(plot_params.offset)
+        plot_params.filename = filename + \
+        'materials-y-{0}'.format(plot_params.offset)
     elif plane == 'yz':
         plot_params.title = 'x = {0}'.format(plot_params.offset)
-        plot_params.filename = 'materials-x-{0}'.format(plot_params.offset)
+        plot_params.filename = filename + \
+        'materials-x-{0}'.format(plot_params.offset)
     plot_params.interpolation = 'nearest'
     plot_params.vmin = 0
     plot_params.vmax = num_materials
@@ -368,7 +373,7 @@ def plot_materials(geometry, gridsize=250, xlim=None, ylim=None, zlim=None,
 
 def plot_cells(geometry, gridsize=250, xlim=None, ylim=None, zlim = None,
                plane='xy', offset=None, get_figure=False,
-               library='matplotlib'):
+               library='matplotlib', filename=''):
     """Plots a color-coded 2D surface plot of the cells in the geometry.
 
     The geometry must be initialized with materials, cells, universes and
@@ -394,6 +399,8 @@ def plot_cells(geometry, gridsize=250, xlim=None, ylim=None, zlim = None,
         Whether to return the Matplotlib figure (only if library='matplotlib')
     library : {'matplotlib', 'pil'}
         The plotting library to use
+    filename : String, optional
+        The prefix filename of the plot for savefig
 
     Returns
     -------
@@ -435,13 +442,16 @@ def plot_cells(geometry, gridsize=250, xlim=None, ylim=None, zlim = None,
     plot_params.suptitle = 'Cells'
     if plane == 'xy':
         plot_params.title = 'z = {0}'.format(plot_params.offset)
-        plot_params.filename = 'cells-z-{0}'.format(plot_params.offset)
+        plot_params.filename = filename + \
+        'cells-z-{0}'.format(plot_params.offset)
     elif plane == 'xz':
         plot_params.title = 'y = {0}'.format(plot_params.offset)
-        plot_params.filename = 'cells-y-{0}'.format(plot_params.offset)
+        plot_params.filename = filename + \
+        'cells-y-{0}'.format(plot_params.offset)
     elif plane == 'yz':
         plot_params.title = 'x = {0}'.format(plot_params.offset)
-        plot_params.filename = 'cells-x-{0}'.format(plot_params.offset)
+        plot_params.filename = filename + \
+        'cells-x-{0}'.format(plot_params.offset)
     plot_params.interpolation = 'nearest'
     plot_params.vmin = 0
     plot_params.vmax = num_cells
@@ -458,7 +468,7 @@ def plot_cells(geometry, gridsize=250, xlim=None, ylim=None, zlim = None,
 def plot_flat_source_regions(geometry, gridsize=250, xlim=None, ylim=None,
                              zlim=None, plane='xy', offset=0, centroids=False,
                              marker_type='o', marker_size=2, get_figure=False,
-                             library='matplotlib'):
+                             library='matplotlib', filename=''):
     """Plots a color-coded 2D surface plot of the FSRs in the geometry.
 
     The geometry must be initialized with materials, cells, universes and
@@ -490,6 +500,8 @@ def plot_flat_source_regions(geometry, gridsize=250, xlim=None, ylim=None,
         Whether to return the Matplotlib figure (only if library='matplotlib')
     library : {'matplotlib', 'pil'}
         The plotting library to use
+    filename : String, optional
+        The prefix filename of the plot for savefig
 
     Returns
     -------
@@ -538,16 +550,16 @@ def plot_flat_source_regions(geometry, gridsize=250, xlim=None, ylim=None,
     plot_params.suptitle = 'Flat Source Regions'
     if plane == 'xy':
         plot_params.title = 'z = {0}'.format(plot_params.offset)
-        plot_params.filename = 'flat-source-regions-z-{0}'\
-            .format(plot_params.offset)
+        plot_params.filename = filename + \
+        'flat-source-regions-z-{0}'.format(plot_params.offset)
     elif plane == 'xz':
         plot_params.title = 'y = {0}'.format(plot_params.offset)
-        plot_params.filename = 'flat-source-regions-y-{0}'\
-            .format(plot_params.offset)
+        plot_params.filename = filename + \
+        'flat-source-regions-y-{0}'.format(plot_params.offset)
     elif plane == 'yz':
         plot_params.title = 'x = {0}'.format(plot_params.offset)
-        plot_params.filename = 'flat-source-regions-x-{0}'\
-            .format(plot_params.offset)
+        plot_params.filename = filename + \
+        'flat-source-regions-x-{0}'.format(plot_params.offset)
     plot_params.interpolation = 'nearest'
     plot_params.vmin = 0
     plot_params.vmax = num_fsrs
@@ -627,7 +639,7 @@ def plot_flat_source_regions(geometry, gridsize=250, xlim=None, ylim=None,
 
 def plot_cmfd_cells(geometry, cmfd, gridsize=250, xlim=None, ylim=None,
                     zlim=None, plane='xy', offset=0, get_figure=False,
-                    library='matplotlib'):
+                    library='matplotlib', filename=''):
     """Plots a color-coded 2D surface plot of the CMFD cells in a geometry.
 
     The geometry must be initialized with materials, cells, universes and
@@ -657,6 +669,8 @@ def plot_cmfd_cells(geometry, cmfd, gridsize=250, xlim=None, ylim=None,
         Whether to return the Matplotlib figure (only if library='matplotlib')
     library : {'matplotlib', 'pil'}
         The plotting library to use
+    filename : String, optional
+        The prefix filename of the plot for savefig
 
     Returns
     -------
@@ -699,13 +713,16 @@ def plot_cmfd_cells(geometry, cmfd, gridsize=250, xlim=None, ylim=None,
     plot_params.suptitle = 'CMFD Cells'
     if plane == 'xy':
         plot_params.title = 'z = {0}'.format(plot_params.offset)
-        plot_params.filename = 'cmfd-cells-z-{0}'.format(plot_params.offset)
+        plot_params.filename = filename + \
+        'cmfd-cells-z-{0}'.format(plot_params.offset)
     elif plane == 'xz':
         plot_params.title = 'y = {0}'.format(plot_params.offset)
-        plot_params.filename = 'cmfd-cells-y-{0}'.format(plot_params.offset)
+        plot_params.filename = filename + \
+        'cmfd-cells-y-{0}'.format(plot_params.offset)
     elif plane == 'yz':
         plot_params.title = 'x = {0}'.format(plot_params.offset)
-        plot_params.filename = 'cmfd-cells-x-{0}'.format(plot_params.offset)
+        plot_params.filename = filename + \
+        'cmfd-cells-x-{0}'.format(plot_params.offset)
     plot_params.interpolation = 'nearest'
     plot_params.vmin = 0
     plot_params.vmax = num_cmfd_cells

@@ -74,6 +74,8 @@ struct DomainCommunicator {
   CMFD_PRECISION*** coupling_coeffs;
   /* Fluxes of connecting neighbors for each surface cell*/
   CMFD_PRECISION*** fluxes;
+  /* Connecting surface currents for each surface cell. [0]-old, [1]-new*/
+  CMFD_PRECISION*** currents;
   /* Buffer for sending/receiving fluxes to/from connecting neighbors */
   CMFD_PRECISION** buffer;
   int num_groups;

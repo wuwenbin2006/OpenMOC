@@ -410,55 +410,62 @@ void getCouplingTerms(DomainCommunicator* comm, int color, int*& coupling_sizes,
 
         MPI_Cart_shift(comm->_MPI_cart, coord, dir, &source, &dest);
 
-        // Pack MPI buffer
+        /* Pack MPI buffer. Fluxes of all 6 surfaces are packed, but the source 
+           or dest could be PROC_NULL. Then these are not sent or updated*/
         int size = 0;
         if (surf == SURFACE_X_MIN) {
           size = ny * nz * ng;
-          for (int i=0; i < nz; i++)
-            for (int j=0; j < ny; j++)
-              for (int g=0; g < ng; g++)
-                comm->buffer[surf][ng*(i*ny+j)+g] =
-                  curr_fluxes[ng*((i*ny + j)*nx)+g];
+          if(dest != MPI_PROC_NULL)
+            for (int i=0; i < nz; i++)
+              for (int j=0; j < ny; j++)
+                for (int g=0; g < ng; g++)
+                  comm->buffer[surf][ng*(i*ny+j)+g] =
+                    curr_fluxes[ng*((i*ny + j)*nx)+g];
         }
         else if (surf == SURFACE_X_MAX) {
           size = ny * nz * ng;
-          for (int i=0; i < nz; i++)
-            for (int j=0; j < ny; j++)
-              for (int g=0; g < ng; g++)
-                comm->buffer[surf][ng*(i*ny+j)+g] =
-                  curr_fluxes[ng*((i*ny + j)*nx + nx-1)+g];
+          if(dest != MPI_PROC_NULL)
+            for (int i=0; i < nz; i++)
+              for (int j=0; j < ny; j++)
+                for (int g=0; g < ng; g++)
+                  comm->buffer[surf][ng*(i*ny+j)+g] =
+                    curr_fluxes[ng*((i*ny + j)*nx + nx-1)+g];
         }
         else if (surf == SURFACE_Y_MIN) {
           size = nx * nz * ng;
-          for (int i=0; i < nz; i++)
-            for (int j=0; j < nx; j++)
-              for (int g=0; g < ng; g++)
-                comm->buffer[surf][ng*(i*nx+j)+g] =
-                  curr_fluxes[ng*(i*nx*ny + j)+g];
+          if(dest != MPI_PROC_NULL)
+            for (int i=0; i < nz; i++)
+              for (int j=0; j < nx; j++)
+                for (int g=0; g < ng; g++)
+                  comm->buffer[surf][ng*(i*nx+j)+g] =
+                    curr_fluxes[ng*(i*nx*ny + j)+g];
         }
         else if (surf == SURFACE_Y_MAX) {
           size = nx * nz * ng;
-          for (int i=0; i < nz; i++)
-            for (int j=0; j < nx; j++)
-              for (int g=0; g < ng; g++)
-                comm->buffer[surf][ng*(i*nx+j)+g] =
-                  curr_fluxes[ng*(i*nx*ny + j + nx*(ny-1))+g];
+          if(dest != MPI_PROC_NULL)
+            for (int i=0; i < nz; i++)
+              for (int j=0; j < nx; j++)
+                for (int g=0; g < ng; g++)
+                  comm->buffer[surf][ng*(i*nx+j)+g] =
+                    curr_fluxes[ng*(i*nx*ny + j + nx*(ny-1))+g];
         }
         else if (surf == SURFACE_Z_MIN) {
           size = nx * ny * ng;
-          for (int i=0; i < ny; i++)
-            for (int j=0; j < nx; j++)
-              for (int g=0; g < ng; g++)
-                comm->buffer[surf][ng*(i*nx+j)+g] =
-                  curr_fluxes[ng*(i*nx + j)+g];
+          if(dest != MPI_PROC_NULL)
+            for (int i=0; i < ny; i++)
+              for (int j=0; j < nx; j++)
+                for (int g=0; g < ng; g++)
+                  comm->buffer[surf][ng*(i*nx+j)+g] =
+                    curr_fluxes[ng*(i*nx + j)+g];
         }
         else if (surf == SURFACE_Z_MAX) {
           size = nx * ny * ng;
-          for (int i=0; i < ny; i++)
-            for (int j=0; j < nx; j++)
-              for (int g=0; g < ng; g++)
-                comm->buffer[surf][ng*(i*nx+j)+g] =
-                  curr_fluxes[ng*(i*nx + j + nx*ny*(nz-1))+g];
+          if(dest != MPI_PROC_NULL)
+            for (int i=0; i < ny; i++)
+              for (int j=0; j < nx; j++)
+                for (int g=0; g < ng; g++)
+                  comm->buffer[surf][ng*(i*nx+j)+g] =
+                    curr_fluxes[ng*(i*nx + j + nx*ny*(nz-1))+g];
         }
 
         sizes[surf] = size;

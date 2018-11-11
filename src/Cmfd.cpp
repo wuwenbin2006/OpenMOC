@@ -211,17 +211,20 @@ Cmfd::~Cmfd() {
           delete [] _domain_communicator->domains[rb][f];
           delete [] _domain_communicator->coupling_coeffs[rb][f];
           delete [] _domain_communicator->fluxes[rb][f];
+          delete [] _domain_communicator->currents[rb][f];
         }
         delete [] _domain_communicator->num_connections[rb];
         delete [] _domain_communicator->indexes[rb];
         delete [] _domain_communicator->domains[rb];
         delete [] _domain_communicator->coupling_coeffs[rb];
         delete [] _domain_communicator->fluxes[rb];
+        delete [] _domain_communicator->currents[rb];
       }
 
       delete [] _domain_communicator->num_connections;
       delete [] _domain_communicator->indexes;
       delete [] _domain_communicator->fluxes;
+      delete [] _domain_communicator->currents;
       delete [] _domain_communicator->coupling_coeffs;
       delete _domain_communicator;
 
@@ -1208,8 +1211,8 @@ void Cmfd::updateMOCFlux() {
   int* coupling_sizes = NULL;
   int** coupling_indexes = NULL;
   CMFD_PRECISION** coupling_coeffs = NULL;
-  CMFD_PRECISION** coupling_fluxes_old = NULL;
-  CMFD_PRECISION** coupling_fluxes_new = NULL;
+  CMFD_PRECISION** coupling_fluxes_old = NULL; //point to DomainCommunicator.buffer
+  CMFD_PRECISION** coupling_fluxes_new = NULL; //point to DomainCommunicator.buffer. use one at a time.
   int offset = 0;
   int color = 0;
 
@@ -1222,6 +1225,10 @@ void Cmfd::updateMOCFlux() {
                    _old_flux->getArray(), offset);             
 #endif
   
+  
+  //calculate the boundary currents for boundary CMFD cells. 
+  //上面申请了全部6个面的净流内存. 对于标通量, 申请了同样多的内存, 并且打包了, 但是不一定
+  //都发送出去, 只有相邻进程号不为空才需要打包.
   
   
   
@@ -3247,6 +3254,7 @@ void Cmfd::initialize() {
       
       /* Arrays to contain data to communicate to/receive from other domains */
       _domain_communicator->fluxes = new CMFD_PRECISION**[2];
+      _domain_communicator->currents = new CMFD_PRECISION**[2];
       _domain_communicator->coupling_coeffs = new CMFD_PRECISION**[2];
       _domain_communicator->buffer = new CMFD_PRECISION*[NUM_FACES];
       for (int rb=0; rb<2; rb++) {
@@ -3254,6 +3262,7 @@ void Cmfd::initialize() {
         _domain_communicator->indexes[rb] = new int*[num_cells*ncg];
         _domain_communicator->domains[rb] = new int*[num_cells*ncg];
         _domain_communicator->fluxes[rb] = new CMFD_PRECISION*[NUM_FACES];
+        _domain_communicator->currents[rb] = new CMFD_PRECISION*[NUM_FACES];
         _domain_communicator->coupling_coeffs[rb] =
                             new CMFD_PRECISION*[num_cells*ncg];
 
@@ -3261,6 +3270,8 @@ void Cmfd::initialize() {
           for (int d=0; d < 2; d++) {
             int surf = coord + 3 * d;
             _domain_communicator->fluxes[rb][surf] =
+                                new CMFD_PRECISION[dir_sizes[coord]*ncg];
+            _domain_communicator->currents[rb][surf] =
                                 new CMFD_PRECISION[dir_sizes[coord]*ncg];
             _domain_communicator->buffer[surf] =
                                 new CMFD_PRECISION[2*dir_sizes[coord]*ncg];

@@ -103,6 +103,9 @@ private:
 
   /** The corrected diffusion coefficients from the previous iteration */
   Vector* _old_dif_surf_corr;
+  
+  /** The diffusion coefficients from the previous iteration */
+  Vector* _old_dif_surf;
 
   /** Whether the old diffusion coefficient has been set */
   bool _old_dif_surf_valid;

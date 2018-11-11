@@ -66,6 +66,7 @@ Cmfd::Cmfd() {
   _old_flux = NULL;
   _new_flux = NULL;
   _old_dif_surf_corr = NULL;
+  _old_dif_surf      = NULL;
   _old_source = NULL;
   _new_source = NULL;
   _flux_moments = NULL;
@@ -1137,6 +1138,7 @@ void Cmfd::constructMatrices(int moc_iteration) {
            
           /* Record the corrected diffusion coefficient */
           _old_dif_surf_corr->setValue(i, s*_num_cmfd_groups+e, dif_surf_corr);
+          _old_dif_surf     ->setValue(i, s*_num_cmfd_groups+e, dif_surf     );
           _old_dif_surf_valid = true;
 
           /* Set the diagonal term */
@@ -3181,6 +3183,8 @@ void Cmfd::initialize() {
     delete _new_flux;
   if (_old_dif_surf_corr != NULL)
     delete _old_dif_surf_corr;
+  if (_old_dif_surf != NULL)
+    delete _old_dif_surf;
   if (_volumes != NULL)
     delete _volumes;
   if (_cell_locks != NULL)
@@ -3222,7 +3226,10 @@ void Cmfd::initialize() {
                            _local_num_zn, ncg);
     _old_dif_surf_corr = new Vector(_cell_locks, _local_num_xn, _local_num_yn,
                                     _local_num_zn, NUM_FACES * ncg);
+    _old_dif_surf      = new Vector(_cell_locks, _local_num_xn, _local_num_yn,
+                                    _local_num_zn, NUM_FACES * ncg);
     _old_dif_surf_corr->setAll(0.0);
+    _old_dif_surf     ->setAll(0.0);
     _volumes = new Vector(_cell_locks, _local_num_xn, _local_num_yn, 
                           _local_num_zn, 1);
 

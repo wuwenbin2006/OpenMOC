@@ -1203,6 +1203,39 @@ void Cmfd::updateMOCFlux() {
   
   /* Get FSR to keys vector indexed by FSR IDs */
   std::vector<std::string>& FSRs_to_keys = _geometry->getFSRsToKeys();
+
+#ifdef MPIx
+  int* coupling_sizes = NULL;
+  int** coupling_indexes = NULL;
+  CMFD_PRECISION** coupling_coeffs = NULL;
+  CMFD_PRECISION** coupling_fluxes_old = NULL;
+  CMFD_PRECISION** coupling_fluxes_new = NULL;
+  int offset = 0;
+  int color = 0;
+
+  getCouplingTerms(_domain_communicator, color, coupling_sizes,
+                   coupling_indexes, coupling_coeffs, coupling_fluxes_old,
+                   _old_flux->getArray(), offset);
+  
+  getCouplingTerms(_domain_communicator, color, coupling_sizes,
+                   coupling_indexes, coupling_coeffs, coupling_fluxes_new,
+                   _old_flux->getArray(), offset);             
+#endif
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   /* Loop over mesh cells */
 #pragma omp parallel for
@@ -1250,9 +1283,12 @@ void Cmfd::updateMOCFlux() {
             
             /* Update the boundary angular fluxes by flux update_ratio*/
             for(int t=0; t<track_IDs.size(); t++) {
-              _start_flux[((track_IDs[t] >> 1) << 1) * fluxes_per_track \
-                          + (track_IDs[t] & 1) * fluxes_per_track \
+              long tmp = track_IDs[t] >> 3;
+              _start_flux[((tmp >> 1) << 1) * fluxes_per_track \
+                          + (tmp & 1) * fluxes_per_track \
                           + (h)] *= update_ratio;
+              
+              int surface = track_IDs[t] & 7;
             }
           }
 

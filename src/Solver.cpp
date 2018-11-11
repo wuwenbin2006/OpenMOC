@@ -2088,6 +2088,14 @@ void Solver::setupFSRTracks() {
   
   /* Get FSR to keys vector indexed by FSR IDs */
   std::vector<std::string>& FSRs_to_keys = _geometry->getFSRsToKeys();
+  double xmin = _geometry->getMinX();
+  double ymin = _geometry->getMinY();
+  double zmin = _geometry->getMinZ();
+  double xmax = _geometry->getMaxX();
+  double ymax = _geometry->getMaxY();
+  double zmax = _geometry->getMaxZ();
+  
+  int start_surface, end_surface;
   
   for (long t=0; t<_tot_num_tracks; t++) {
     
@@ -2102,17 +2110,56 @@ void Solver::setupFSRTracks() {
     /* Get the angle of Track */
     azim = track.getPhi();
     polar = track.getTheta();  
+    
     /* Get the start point */
-    ox = track.getStart()->getX() + cos(azim) * sin(polar) * TINY_MOVE;
-    oy = track.getStart()->getY() + sin(azim) * sin(polar) * TINY_MOVE;
-    oz = track.getStart()->getZ() + cos(polar) * TINY_MOVE;
+    ox = track.getStart()->getX();
+    oy = track.getStart()->getY();
+    oz = track.getStart()->getZ();
+    if (fabs(ox - xmin) < ON_SURFACE_THRESH)
+      start_surface = SURFACE_X_MIN;
+    else if (fabs(ox - xmax) < ON_SURFACE_THRESH)
+      start_surface = SURFACE_X_MAX;
+    else if (fabs(oy - ymin) < ON_SURFACE_THRESH)
+      start_surface = SURFACE_Y_MIN;
+    else if (fabs(oy - ymax) < ON_SURFACE_THRESH)
+      start_surface = SURFACE_Y_MAX;
+    else if (fabs(oz - zmin) < ON_SURFACE_THRESH)
+      start_surface = SURFACE_Z_MIN;
+    else if (fabs(oz - zmax) < ON_SURFACE_THRESH)
+      start_surface = SURFACE_Z_MAX;
+    else
+      log_printf(ERROR, "%s NOT start from the domain boundaries.", 
+                 track.toString().c_str());
+    
+    ox += cos(azim) * sin(polar) * TINY_MOVE;
+    oy += sin(azim) * sin(polar) * TINY_MOVE;
+    oz += cos(polar) * TINY_MOVE;
     start_point = new LocalCoords(ox, oy, oz, true);
     start_point->setUniverse(_geometry->getRootUniverse());
     
     /* Get the end point */
-    ox = track.getEnd()->getX() - cos(azim) * sin(polar) * TINY_MOVE;
-    oy = track.getEnd()->getY() - sin(azim) * sin(polar) * TINY_MOVE;
-    oz = track.getEnd()->getZ() - cos(polar) * TINY_MOVE;
+    ox = track.getEnd()->getX();
+    oy = track.getEnd()->getY();
+    oz = track.getEnd()->getZ();
+    if (fabs(ox - xmin) < ON_SURFACE_THRESH)
+      end_surface = SURFACE_X_MIN;
+    else if (fabs(ox - xmax) < ON_SURFACE_THRESH)
+      end_surface = SURFACE_X_MAX;
+    else if (fabs(oy - ymin) < ON_SURFACE_THRESH)
+      end_surface = SURFACE_Y_MIN;
+    else if (fabs(oy - ymax) < ON_SURFACE_THRESH)
+      end_surface = SURFACE_Y_MAX;
+    else if (fabs(oz - zmin) < ON_SURFACE_THRESH)
+      end_surface = SURFACE_Z_MIN;
+    else if (fabs(oz - zmax) < ON_SURFACE_THRESH)
+      end_surface = SURFACE_Z_MAX;
+    else
+      log_printf(ERROR, "%s NOT end on the domain boundaries.", 
+                 track.toString().c_str());    
+    
+    ox -= cos(azim) * sin(polar) * TINY_MOVE;
+    oy -= sin(azim) * sin(polar) * TINY_MOVE;
+    oz -= cos(polar) * TINY_MOVE;
     end_point = new LocalCoords(ox, oy, oz, true);
     end_point->setUniverse(_geometry->getRootUniverse());
     
@@ -2124,11 +2171,11 @@ void Solver::setupFSRTracks() {
     
     /* Push back the track ID and start(0) indicator to the start FSR*/
     std::string key = FSRs_to_keys[start_ID];
-    FSR_keys_map.at(key)->_track_IDs.push_back(t << 1);
+    FSR_keys_map.at(key)->_track_IDs.push_back((t << 4) + start_surface);
     
     /* Push back the track ID and end(1) indicator to the end FSR*/
     key = FSRs_to_keys[end_ID];
-    FSR_keys_map.at(key)->_track_IDs.push_back((t << 1) + 1);
+    FSR_keys_map.at(key)->_track_IDs.push_back((t << 4) + 8 +end_surface );
     
     log_printf(DEBUG, "%s, startFSRID = %ld, endFSRID = %ld", 
                track.toString().c_str(), start_ID, end_ID);

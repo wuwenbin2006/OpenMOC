@@ -682,6 +682,11 @@ void Geometry::setDomainDecomposition(int nx, int ny, int nz, MPI_Comm comm) {
     /* Create the MPI Communicator */
     int dims[3] = {nx, ny, nz};
     int wrap[3] = {false, false, false};
+    
+    /* wrap indicates the periodic feature of the communicator. If in some 
+       direction, the boundary type is PERIODIC, this value should be true. 
+       Currently PERIODIC boundary condition is not supported in domain 
+       decomposition. */
     int ret = MPI_Cart_create(comm, 3, dims, wrap, true, &_MPI_cart);
     log_set_ranks(_MPI_cart);
 

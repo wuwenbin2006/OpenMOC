@@ -408,6 +408,7 @@ void getCouplingTerms(DomainCommunicator* comm, int color, int*& coupling_sizes,
         int op_surf = surf - 3*dir;
         int source, dest;
 
+        /* _MPI_cart should have periodic feature if periodic boundary exist. */
         MPI_Cart_shift(comm->_MPI_cart, coord, dir, &source, &dest);
 
         /* Pack MPI buffer. Fluxes of all 6 surfaces are packed, but the source 

@@ -845,11 +845,15 @@ void Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
     /* Set diffusion coefficient and flux for the neighboring cell */
     int cmfd_cell_next = getLocalCMFDCell(global_cmfd_cell_next);
     CMFD_PRECISION dif_coef_next;
+    
+    /* Surface is an interface between domains, or an PERIODIC BC but next cell
+       is out of this domain*/
     if (cmfd_cell_next == -1) {
 
       /* Get the currents in cells touching this boundary */
       CMFD_PRECISION** boundary_currents = _boundary_surface_currents[surface];
 
+      /* idx, the CMFD cell index on local surface */
       int idx = _boundary_index_map.at(surface)[global_cmfd_cell_next];
       dif_coef_next = _boundary_diffusion[surface][idx][group] /
                 _boundary_reaction[surface][idx][group];
@@ -858,6 +862,7 @@ void Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
       /* Get the inward current on the surface */
       current_in = boundary_currents[idx][surface_next*_num_cmfd_groups+group];
     }
+    /* Surface is an PERIODIC BC and next cell is within this domain */
     else {
 
       dif_coef_next = getDiffusionCoefficient(cmfd_cell_next, group);
@@ -1210,34 +1215,135 @@ void Cmfd::updateMOCFlux() {
   std::vector<std::string>& FSRs_to_keys = _geometry->getFSRsToKeys();
 
 #ifdef MPIx
+  
+  int nx = _local_num_xn;
+  int ny = _local_num_yn;
+  int nz = _local_num_zn;
+  
+  int ng = _num_cmfd_groups;
+  
+  DomainCommunicator* comm = _domain_communicator;
+  
   int* coupling_sizes = NULL;
   int** coupling_indexes = NULL;
   CMFD_PRECISION** coupling_coeffs = NULL;
-  CMFD_PRECISION** coupling_fluxes_old = NULL; //point to DomainCommunicator.buffer
-  CMFD_PRECISION** coupling_fluxes_new = NULL; //point to DomainCommunicator.buffer. use one at a time.
+  CMFD_PRECISION** coupling_fluxes = NULL; //point to DomainCommunicator.buffer
+   //point to DomainCommunicator.buffer. use one at a time.
   int offset = 0;
   int color = 0;
 
   getCouplingTerms(_domain_communicator, color, coupling_sizes,
-                   coupling_indexes, coupling_coeffs, coupling_fluxes_old,
+                   coupling_indexes, coupling_coeffs, coupling_fluxes,
                    _old_flux->getArray(), offset);
   
-  getCouplingTerms(_domain_communicator, color, coupling_sizes,
-                   coupling_indexes, coupling_coeffs, coupling_fluxes_new,
-                   _old_flux->getArray(), offset);             
-#endif
-  
+
+  CMFD_PRECISION* curr_fluxes = _old_flux->getArray();
+  CMFD_PRECISION dif_surf, dif_surf_corr;
+  CMFD_PRECISION flux, flux_next;
+  int cmfd_cell;
   
   //calculate the boundary currents for boundary CMFD cells. 
   //上面申请了全部6个面的净流内存. 对于标通量, 申请了同样多的内存, 并且打包了, 但是不一定
   //都发送出去, 只有相邻进程号不为空才需要打包.
+  for (int coord=0; coord < 3; coord++) {
+    for (int d=0; d<2; d++) {
+    
+      int dir = 2*d-1;
+      int surf = coord + 3*d;
+    
+    
+      /* Calculate the net current on domain boundaries */
+      if (surf == SURFACE_X_MIN) {
+          for (int i=0; i < nz; i++)
+            for (int j=0; j < ny; j++)
+              for (int g=0; g < ng; g++)
+                comm->currents[0][surf][ng*(i*ny+j)+g] =
+                  curr_fluxes[ng*((i*ny + j)*nx)+g];
+        }
+      
+      
+      else if (surf == SURFACE_X_MAX) {
+        if (_boundaries[surf] == REFLECTIVE) {
+          memset(comm->currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
+        }
+        else if (_boundaries[surf] == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx + nx-1;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                comm->currents[0][surf][ng*(i*ny+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_boundaries[surf] == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx + nx-1;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*ny + j)+g];
+                comm->currents[0][surf][ng*(i*ny+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+    
+    
+      else if (surf == SURFACE_Y_MIN) {
+          for (int i=0; i < nz; i++)
+            for (int j=0; j < nx; j++)
+              for (int g=0; g < ng; g++)
+                comm->buffer[surf][ng*(i*nx+j)+g] =
+                  curr_fluxes[ng*(i*nx*ny + j)+g];
+        }
+      else if (surf == SURFACE_Y_MAX) {
+          for (int i=0; i < nz; i++)
+            for (int j=0; j < nx; j++)
+              for (int g=0; g < ng; g++)
+                comm->buffer[surf][ng*(i*nx+j)+g] =
+                  curr_fluxes[ng*(i*nx*ny + j + nx*(ny-1))+g];
+        }
+      else if (surf == SURFACE_Z_MIN) {
+          for (int i=0; i < ny; i++)
+            for (int j=0; j < nx; j++)
+              for (int g=0; g < ng; g++)
+                comm->buffer[surf][ng*(i*nx+j)+g] =
+                  curr_fluxes[ng*(i*nx + j)+g];
+        }
+      else if (surf == SURFACE_Z_MAX) {
+          for (int i=0; i < ny; i++)
+            for (int j=0; j < nx; j++)
+              for (int g=0; g < ng; g++)
+                comm->buffer[surf][ng*(i*nx+j)+g] =
+                  curr_fluxes[ng*(i*nx + j + nx*ny*(nz-1))+g];
+        }
+    
+    
+      }
+    }
   
   
   
   
   
+  getCouplingTerms(_domain_communicator, color, coupling_sizes,
+                   coupling_indexes, coupling_coeffs, coupling_fluxes,
+                   _new_flux->getArray(), offset);  
   
-  
+  curr_fluxes = _new_flux->getArray();
+#endif  
   
   
   

@@ -2124,11 +2124,11 @@ void Solver::setupFSRTracks() {
     
     /* Push back the track ID and start(0) indicator to the start FSR*/
     std::string key = FSRs_to_keys[start_ID];
-    FSR_keys_map.at(key)->_track_IDs.push_back(t*2);
+    FSR_keys_map.at(key)->_track_IDs.push_back(t << 1);
     
     /* Push back the track ID and end(1) indicator to the end FSR*/
     key = FSRs_to_keys[end_ID];
-    FSR_keys_map.at(key)->_track_IDs.push_back(t*2 +1);
+    FSR_keys_map.at(key)->_track_IDs.push_back((t << 1) + 1);
     
     log_printf(DEBUG, "%s, startFSRID = %ld, endFSRID = %ld", 
                track.toString().c_str(), start_ID, end_ID);

@@ -1250,8 +1250,8 @@ void Cmfd::updateMOCFlux() {
             
             /* Update the boundary angular fluxes by flux update_ratio*/
             for(int t=0; t<track_IDs.size(); t++) {
-              _start_flux[(track_IDs[t]/2)*2*fluxes_per_track \
-                          + (track_IDs[t]%2)*fluxes_per_track \
+              _start_flux[((track_IDs[t] >> 1) << 1) * fluxes_per_track \
+                          + (track_IDs[t] & 1) * fluxes_per_track \
                           + (h)] *= update_ratio;
             }
           }

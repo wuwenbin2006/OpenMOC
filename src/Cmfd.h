@@ -214,6 +214,9 @@ private:
   /** Array of geometry boundaries */
   boundaryType* _boundaries;
 
+  /* Connecting surface currents for each surface cell. [0]-old, [1]-new*/
+  CMFD_PRECISION*** _boundary_currents;
+  
   /** Array of surface currents for each CMFD cell */
   Vector* _surface_currents;
 

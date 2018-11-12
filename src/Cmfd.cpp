@@ -1253,10 +1253,10 @@ void Cmfd::updateMOCFlux() {
     
       /* Calculate the net current on domain boundaries */
       if (surf == SURFACE_X_MIN) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMinXBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMinXBoundaryType() == VACUUM) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < ny; j++) {
               cmfd_cell = (i*ny + j)*nx;
@@ -1271,7 +1271,7 @@ void Cmfd::updateMOCFlux() {
             }
           }
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMinXBoundaryType() == INTERFACE) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < ny; j++) {
               cmfd_cell = (i*ny + j)*nx;
@@ -1292,10 +1292,10 @@ void Cmfd::updateMOCFlux() {
         
         
       else if (surf == SURFACE_X_MAX) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMaxXBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMaxXBoundaryType() == VACUUM) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < ny; j++) {
               cmfd_cell = (i*ny + j)*nx + nx-1;
@@ -1310,7 +1310,7 @@ void Cmfd::updateMOCFlux() {
             }
           }
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMaxXBoundaryType() == INTERFACE) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < ny; j++) {
               cmfd_cell = (i*ny + j)*nx + nx-1;
@@ -1331,10 +1331,10 @@ void Cmfd::updateMOCFlux() {
     
     
       else if (surf == SURFACE_Y_MIN) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMinYBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMinYBoundaryType() == VACUUM) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx*ny + j;
@@ -1349,7 +1349,7 @@ void Cmfd::updateMOCFlux() {
             }
           }  
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMinYBoundaryType() == INTERFACE) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx*ny + j;
@@ -1370,10 +1370,10 @@ void Cmfd::updateMOCFlux() {
         
         
       else if (surf == SURFACE_Y_MAX) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMaxYBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMaxYBoundaryType() == VACUUM) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx*ny + j + nx*(ny-1);
@@ -1388,7 +1388,7 @@ void Cmfd::updateMOCFlux() {
             }
           }  
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMaxYBoundaryType() == INTERFACE) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx*ny + j + nx*(ny-1);
@@ -1409,10 +1409,10 @@ void Cmfd::updateMOCFlux() {
         
         
       else if (surf == SURFACE_Z_MIN) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMinZBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMinZBoundaryType() == VACUUM) {
           for (int i=0; i < ny; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx + j;
@@ -1427,7 +1427,7 @@ void Cmfd::updateMOCFlux() {
             }
           }
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMinZBoundaryType() == INTERFACE) {
           for (int i=0; i < ny; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx + j;
@@ -1448,10 +1448,10 @@ void Cmfd::updateMOCFlux() {
         
         
       else if (surf == SURFACE_Z_MAX) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMaxZBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMaxZBoundaryType() == VACUUM) {
           for (int i=0; i < ny; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx + j + nx*ny*(nz-1);
@@ -1466,7 +1466,7 @@ void Cmfd::updateMOCFlux() {
             }
           }
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMaxZBoundaryType() == INTERFACE) {
           for (int i=0; i < ny; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx + j + nx*ny*(nz-1);
@@ -1503,10 +1503,10 @@ void Cmfd::updateMOCFlux() {
     
       /* Calculate the net current on domain boundaries */
       if (surf == SURFACE_X_MIN) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMinXBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMinXBoundaryType() == VACUUM) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < ny; j++) {
               cmfd_cell = (i*ny + j)*nx;
@@ -1521,7 +1521,7 @@ void Cmfd::updateMOCFlux() {
             }
           }
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMinXBoundaryType() == INTERFACE) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < ny; j++) {
               cmfd_cell = (i*ny + j)*nx;
@@ -1542,10 +1542,10 @@ void Cmfd::updateMOCFlux() {
         
         
       else if (surf == SURFACE_X_MAX) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMaxXBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMaxXBoundaryType() == VACUUM) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < ny; j++) {
               cmfd_cell = (i*ny + j)*nx + nx-1;
@@ -1560,7 +1560,7 @@ void Cmfd::updateMOCFlux() {
             }
           }
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMaxXBoundaryType() == INTERFACE) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < ny; j++) {
               cmfd_cell = (i*ny + j)*nx + nx-1;
@@ -1581,10 +1581,10 @@ void Cmfd::updateMOCFlux() {
     
     
       else if (surf == SURFACE_Y_MIN) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMinYBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMinYBoundaryType() == VACUUM) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx*ny + j;
@@ -1599,7 +1599,7 @@ void Cmfd::updateMOCFlux() {
             }
           }  
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMinYBoundaryType() == INTERFACE) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx*ny + j;
@@ -1620,10 +1620,10 @@ void Cmfd::updateMOCFlux() {
         
         
       else if (surf == SURFACE_Y_MAX) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMaxYBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMaxYBoundaryType() == VACUUM) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx*ny + j + nx*(ny-1);
@@ -1638,7 +1638,7 @@ void Cmfd::updateMOCFlux() {
             }
           }  
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMaxYBoundaryType() == INTERFACE) {
           for (int i=0; i < nz; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx*ny + j + nx*(ny-1);
@@ -1659,10 +1659,10 @@ void Cmfd::updateMOCFlux() {
         
         
       else if (surf == SURFACE_Z_MIN) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMinZBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMinZBoundaryType() == VACUUM) {
           for (int i=0; i < ny; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx + j;
@@ -1677,7 +1677,7 @@ void Cmfd::updateMOCFlux() {
             }
           }
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMinZBoundaryType() == INTERFACE) {
           for (int i=0; i < ny; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx + j;
@@ -1698,10 +1698,10 @@ void Cmfd::updateMOCFlux() {
         
         
       else if (surf == SURFACE_Z_MAX) {
-        if (_boundaries[surf] == REFLECTIVE) {
+        if (_geometry->getMaxZBoundaryType() == REFLECTIVE) {
           memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
         }
-        else if (_boundaries[surf] == VACUUM) {
+        else if (_geometry->getMaxZBoundaryType() == VACUUM) {
           for (int i=0; i < ny; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx + j + nx*ny*(nz-1);
@@ -1716,7 +1716,7 @@ void Cmfd::updateMOCFlux() {
             }
           }
         }
-        else if (_boundaries[surf] == INTERFACE) {
+        else if (_geometry->getMaxZBoundaryType() == INTERFACE) {
           for (int i=0; i < ny; i++) {
             for (int j=0; j < nx; j++) {
               cmfd_cell = i*nx + j + nx*ny*(nz-1);

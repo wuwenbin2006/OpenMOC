@@ -1214,8 +1214,7 @@ void Cmfd::updateMOCFlux() {
   /* Get FSR to keys vector indexed by FSR IDs */
   std::vector<std::string>& FSRs_to_keys = _geometry->getFSRsToKeys();
 
-#ifdef MPIx
-  
+  /* Calculate the old and new boundary currents for boundary CMFD cells. */
   int nx = _local_num_xn;
   int ny = _local_num_yn;
   int nz = _local_num_zn;
@@ -1483,31 +1482,283 @@ void Cmfd::updateMOCFlux() {
     }
   }
   
-  
-  
-  
+  /* Calculate the CMFD(new) boundary currents for boundary CMFD cells. */
+  curr_fluxes = _new_flux->getArray();
   getCouplingTerms(_domain_communicator, color, coupling_sizes,
                    coupling_indexes, coupling_coeffs, coupling_fluxes,
-                   _new_flux->getArray(), offset);  
-  
-  curr_fluxes = _new_flux->getArray();
-#endif  
+                   curr_fluxes, offset);
   
   
-  
-  
-  
-  
-  
-  
+  for (int coord=0; coord < 3; coord++) {
+    for (int d=0; d<2; d++) {
+    
+      int dir = 2*d-1;
+      int surf = coord + 3*d;
+    
+    
+      /* Calculate the net current on domain boundaries */
+      if (surf == SURFACE_X_MIN) {
+        if (_boundaries[surf] == REFLECTIVE) {
+          memset(comm->currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
+        }
+        else if (_boundaries[surf] == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                comm->currents[1][surf][ng*(i*ny+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_boundaries[surf] == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*ny + j)+g];
+                comm->currents[1][surf][ng*(i*ny+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+        
+        
+      else if (surf == SURFACE_X_MAX) {
+        if (_boundaries[surf] == REFLECTIVE) {
+          memset(comm->currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
+        }
+        else if (_boundaries[surf] == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx + nx-1;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                comm->currents[1][surf][ng*(i*ny+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_boundaries[surf] == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx + nx-1;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*ny + j)+g];
+                comm->currents[1][surf][ng*(i*ny+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+    
+    
+      else if (surf == SURFACE_Y_MIN) {
+        if (_boundaries[surf] == REFLECTIVE) {
+          memset(comm->currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
+        }
+        else if (_boundaries[surf] == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j;
+              for (int g=0; g < ng; g++) {        
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];      
+                comm->currents[1][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;  
+              }
+            }
+          }  
+        }
+        else if (_boundaries[surf] == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                comm->currents[1][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+        
+        
+      else if (surf == SURFACE_Y_MAX) {
+        if (_boundaries[surf] == REFLECTIVE) {
+          memset(comm->currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
+        }
+        else if (_boundaries[surf] == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j + nx*(ny-1);
+              for (int g=0; g < ng; g++) {        
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];      
+                comm->currents[1][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;  
+              }
+            }
+          }  
+        }
+        else if (_boundaries[surf] == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j + nx*(ny-1);
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                comm->currents[1][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      } 
+        
+        
+      else if (surf == SURFACE_Z_MIN) {
+        if (_boundaries[surf] == REFLECTIVE) {
+          memset(comm->currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
+        }
+        else if (_boundaries[surf] == VACUUM) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                comm->currents[1][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_boundaries[surf] == INTERFACE) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                comm->currents[1][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+        
+        
+      else if (surf == SURFACE_Z_MAX) {
+        if (_boundaries[surf] == REFLECTIVE) {
+          memset(comm->currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
+        }
+        else if (_boundaries[surf] == VACUUM) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j + nx*ny*(nz-1);
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                comm->currents[1][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_boundaries[surf] == INTERFACE) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j + nx*ny*(nz-1);
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                comm->currents[1][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+    
+  int start_x = _accumulate_lmx[_domain_communicator->_domain_idx_x];
+  int start_y = _accumulate_lmy[_domain_communicator->_domain_idx_y];
+  int start_z = _accumulate_lmz[_domain_communicator->_domain_idx_z];
+
   /* Loop over mesh cells */
 #pragma omp parallel for
   for (int i = 0; i < _local_num_xn * _local_num_yn * _local_num_zn; i++) {
-
+    
+    int ix = i % _local_num_xn;
+    int iy = (i % (_local_num_xn * _local_num_yn)) / _local_num_xn;
+    int iz = i / (_local_num_xn * _local_num_yn);
+    CMFD_PRECISION dx, dy, dz;
+    dx = _cell_widths_x[ix + start_x];
+    dy = _cell_widths_y[iy + start_y];
+    dz = _cell_widths_z[iz + start_z];
+    CMFD_PRECISION J_old, J_new, flux_old, flux_new;
+    CMFD_PRECISION diff_coef, surface_flux_old, surface_flux_new;
+    int sense;
+    
     std::vector<long>::iterator iter;
 
     /* Loop over CMFD groups */
     for (int e = 0; e < _num_cmfd_groups; e++) {
+      
+      flux_old = _old_flux->getValue(i, e);
+      flux_new = _new_flux->getValue(i, e);
+      diff_coef = getDiffusionCoefficient(i, e); //computeLarsensEDCFactor??
 
       /* Loop over FRSs in mesh cell */
       for (iter = _cell_fsrs.at(i).begin();
@@ -1542,7 +1793,7 @@ void Cmfd::updateMOCFlux() {
             _flux_moments[(*iter)*3*_num_moc_groups + h*3 + 2] *= update_ratio;
           }
         
-          if (_boundary_angular_fluxes_update) {
+          if (_boundary_angular_fluxes_update == 1) {
             
             /* Update the boundary angular fluxes by flux update_ratio*/
             for(int t=0; t<track_IDs.size(); t++) {
@@ -1550,11 +1801,37 @@ void Cmfd::updateMOCFlux() {
               _start_flux[((tmp >> 1) << 1) * fluxes_per_track \
                           + (tmp & 1) * fluxes_per_track \
                           + (h)] *= update_ratio;
-              
-              int surface = track_IDs[t] & 7;
             }
           }
-
+          else if (_boundary_angular_fluxes_update == 2) {
+            
+            /* Update the boundary angular fluxes by surface flux update_ratio*/
+            for(int t=0; t<track_IDs.size(); t++) {
+              int surface = track_IDs[t] & 7;
+              sense = getSense(surface);
+              
+              if (surface == SURFACE_X_MIN || surface == SURFACE_X_MAX) {
+                J_old = comm->currents[0][surface][iz*ny+iy];
+                J_new = comm->currents[1][surface][iz*ny+iy];
+              }
+              else if (surface == SURFACE_Y_MIN || surface == SURFACE_Y_MAX) {
+                J_old = comm->currents[0][surface][iz*nx+ix];
+                J_new = comm->currents[1][surface][iz*nx+ix];
+              }
+              else if (surface == SURFACE_Z_MIN || surface == SURFACE_Z_MAX) {
+                J_old = comm->currents[0][surface][iy*nx+ix];
+                J_new = comm->currents[1][surface][iy*nx+ix];
+              }
+            
+              surface_flux_old = -sense * J_old / (2 * diff_coef) + flux_old;
+              surface_flux_new = -sense * J_new / (2 * diff_coef) + flux_new;
+              
+              long tmp = track_IDs[t] >> 3;
+              _start_flux[((tmp >> 1) << 1) * fluxes_per_track \
+                          + (tmp & 1) * fluxes_per_track \
+                          + (h)] *= (surface_flux_new / surface_flux_old);
+            }
+          }
           log_printf(DEBUG, "Updating flux in FSR: %d, cell: %d, MOC group: "
             "%d, CMFD group: %d, ratio: %f", *iter ,i, h, e, update_ratio);
         }

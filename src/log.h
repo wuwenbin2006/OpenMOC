@@ -108,6 +108,7 @@ void set_line_length(int length);
 void set_log_level(const char* new_level);
 void set_log_level(int new_level);
 int get_log_level();
+void collect_message(std::string& msg_string);
 
 void log_printf(logLevel level, const char *format, ...);
 std::string create_multiline_msg(std::string level, std::string message);

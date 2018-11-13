@@ -359,7 +359,6 @@ void log_printf(logLevel level, const char* format, ...) {
       }
     case (NODAL):
       {
-
         std::string msg = std::string(message);
         std::stringstream ss;
         ss << "[  NODE " << rank << " ]  ";
@@ -372,7 +371,10 @@ void log_printf(logLevel level, const char* format, ...) {
         /* Puts message on single line */
         else
           msg_string = level_prefix + msg + "\n";
-
+        
+        collect_message(msg_string);
+        if (rank != 0)
+          return;
         break;
       }
 
@@ -629,3 +631,44 @@ void log_set_ranks(MPI_Comm comm) {
   MPI_Comm_rank(comm, &rank);
 }
 #endif
+
+
+/**
+ * @brief Collect all the messages into root process, for output in node order
+ * @param msg_string message to output
+ */
+void collect_message(std::string& msg_string) {
+  
+  int root = 0;
+  int mylen = msg_string.length();
+  int recvcounts[num_ranks];
+  int displs[num_ranks];
+  int tot_len;
+  char* tot_string;
+  
+  /* Get the message lengths of different nodes */
+  MPI_Gather(&mylen, 1, MPI_INT, recvcounts, 1, MPI_INT, root, _MPI_comm);
+  displs[0] = 0;
+  if (rank == root) 
+    for(int i=1; i<num_ranks; i++)
+      displs[i] = displs[i-1] + recvcounts[i-1];
+  tot_len = displs[num_ranks-1] + recvcounts[num_ranks-1];
+  
+  
+  if (rank == root)
+    tot_string = new char[tot_len+1];
+  
+  /* Collect all the messages into root process */
+  MPI_Gatherv(msg_string.c_str(), mylen, MPI_CHAR, tot_string, recvcounts, 
+              displs, MPI_CHAR, root, MPI_COMM_WORLD);
+  
+  msg_string.clear();
+  if (rank == root) {
+    tot_string[tot_len]='\0';
+    msg_string = tot_string;
+    delete []tot_string;
+  }
+}
+
+
+

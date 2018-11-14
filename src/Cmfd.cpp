@@ -1239,10 +1239,11 @@ void Cmfd::updateMOCFlux() {
   
   /* Calculate the MOC(old) boundary currents for boundary CMFD cells. */
   CMFD_PRECISION* curr_fluxes = _old_flux->getArray();
+#ifdef MPIx  
   getCouplingTerms(_domain_communicator, color, coupling_sizes,
                    coupling_indexes, coupling_coeffs, coupling_fluxes,
                    curr_fluxes, offset);
-  
+#endif  
   
   for (int coord=0; coord < 3; coord++) {
     for (int d=0; d<2; d++) {
@@ -1489,10 +1490,11 @@ void Cmfd::updateMOCFlux() {
   
   /* Calculate the CMFD(new) boundary currents for boundary CMFD cells. */
   curr_fluxes = _new_flux->getArray();
+#ifdef MPIx
   getCouplingTerms(_domain_communicator, color, coupling_sizes,
                    coupling_indexes, coupling_coeffs, coupling_fluxes,
                    curr_fluxes, offset);
-  
+#endif  
   
   for (int coord=0; coord < 3; coord++) {
     for (int d=0; d<2; d++) {

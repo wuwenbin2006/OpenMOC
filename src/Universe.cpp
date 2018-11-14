@@ -1938,28 +1938,23 @@ std::string Lattice::toString() {
          << ", # cells along z = " << _num_z;
   
   if(_non_uniform) {
-    string << "This lattice is non-uniform.\nx widths: ";
-    for(int i=0; i<_num_x; i++)
-      string << _widths_x[i] << "  ";
-    string << "\ny widths: ";
-    for(int i=0; i<_num_y; i++)
-      string << _widths_y[i] << "  ";   
-    string << "\nz widths: ";
-    for(int i=0; i<_num_z; i++)
-      string << _widths_z[i] << "  ";
+    string << "\nThis lattice is non-uniform.";
+    string << "\nx widths: " << vec2str(_widths_x.begin(),_widths_x.end());
+    string << "\ny widths: " << vec2str(_widths_y.begin(),_widths_y.end());
+    string << "\nz widths: " << vec2str(_widths_z.begin(),_widths_z.end());
   }
   else  
     string << ", x width = " << _width_x
            << ", y width = " << _width_y
            << ", z width = " << _width_z;
 
-  string << "\n\t\tUniverse IDs within this Lattice: ";
+  string << "\nUniverse IDs within this Lattice: ";
 
   for (int k = _num_z-1; k > -1;  k--) {
     for (int j = _num_y-1; j > -1;  j--) {
+      string << "\n\t\t";
       for (int i = 0; i < _num_x; i++)
         string << _universes.at(k).at(j).at(i).first << ", ";
-      string << "\n\t\t";
     }
   }
 

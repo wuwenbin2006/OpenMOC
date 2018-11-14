@@ -371,8 +371,9 @@ void log_printf(logLevel level, const char* format, ...) {
         /* Puts message on single line */
         else
           msg_string = level_prefix + msg + "\n";
-        
+#ifdef MPIx        
         collect_message(msg_string);
+#endif
         if (rank != 0)
           return;
         break;
@@ -630,7 +631,6 @@ void log_set_ranks(MPI_Comm comm) {
   MPI_Comm_size(comm, &num_ranks);
   MPI_Comm_rank(comm, &rank);
 }
-#endif
 
 
 /**
@@ -670,5 +670,5 @@ void collect_message(std::string& msg_string) {
   }
 }
 
-
+#endif
 

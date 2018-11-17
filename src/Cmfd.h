@@ -361,6 +361,7 @@ private:
   void constructMatrices(int moc_iteration);
   void collapseXS();
   void updateMOCFlux();
+  void updateBoundaryAngularFlux();
   void rescaleFlux();
   void splitVertexCurrents();
   void splitEdgeCurrents();
@@ -371,6 +372,7 @@ private:
   void generateKNearestStencils();
   int convertDirectionToSurface(int* direction);
   void convertSurfaceToDirection(int surface, int* direction);
+  void computeBoundaryCurrent();
   std::string getSurfaceNameFromDirection(int* direction);
   std::string getSurfaceNameFromSurface(int surface);
 

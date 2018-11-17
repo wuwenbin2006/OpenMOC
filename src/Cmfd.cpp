@@ -1035,6 +1035,11 @@ double Cmfd::computeKeff(int moc_iteration) {
   
   /* Update the MOC flux */
   updateMOCFlux();
+  
+  if (_boundary_angular_fluxes_update != 0) {
+    computeBoundaryCurrent();  
+    updateBoundaryAngularFlux();
+  }
 
   /* Tally the total CMFD time */
   _timer->stopTimer();
@@ -1219,597 +1224,18 @@ void Cmfd::updateMOCFlux() {
 
   log_printf(INFO, "Updating MOC flux...");
 
-  int fluxes_per_track;
-  if (_solve_3D)
-    fluxes_per_track = _num_moc_groups;
-  else
-    fluxes_per_track = _num_moc_groups * _num_polar/2;
-  
   /* Set max prolongation factor */
   if (_convergence_data != NULL)
     _convergence_data->pf = 1.0;
-  
-  /* Get FSR vector maps */
-  ParallelHashMap<std::string, fsr_data*>& FSR_keys_map =
-    _geometry->getFSRKeysMap();
-  
-  /* Get FSR to keys vector indexed by FSR IDs */
-  std::vector<std::string>& FSRs_to_keys = _geometry->getFSRsToKeys();
-
-  /* Calculate the old and new boundary currents for boundary CMFD cells. */
-  int nx = _local_num_xn;
-  int ny = _local_num_yn;
-  int nz = _local_num_zn;
-  int ng = _num_cmfd_groups;
-  
-  DomainCommunicator* comm = _domain_communicator;
-  int* coupling_sizes = NULL;
-  int** coupling_indexes = NULL;
-  CMFD_PRECISION** coupling_coeffs = NULL;
-  CMFD_PRECISION** coupling_fluxes = NULL; 
-  int offset = 0;
-  int color = 0;
-
-  CMFD_PRECISION dif_surf, dif_surf_corr;
-  CMFD_PRECISION flux, flux_next;
-  int cmfd_cell;
-  
-  /* Calculate the MOC(old) boundary currents for boundary CMFD cells. */
-  CMFD_PRECISION* curr_fluxes = _old_flux->getArray();
-  
-  int dir_sizes[3] = {ny*nz, nx*nz, nx*ny};
-#ifdef MPIx  
-  if (_domain_communicator != NULL) {
-    getCouplingTerms(_domain_communicator, color, coupling_sizes,
-                    coupling_indexes, coupling_coeffs, coupling_fluxes,
-                    curr_fluxes, offset);
-    for (int i=0; i<NUM_FACES; i++)
-        log_printf(NODAL, "%d surface old_coupling_fluxes: %s", i, 
-                  vec2str(coupling_fluxes[i],coupling_fluxes[i]+dir_sizes[i%3]*ng).c_str());
-  }
-#endif  
-  
-  for (int coord=0; coord < 3; coord++) {
-    for (int d=0; d<2; d++) {
-    
-      int dir = 2*d-1;
-      int surf = coord + 3*d;
-    
-    
-      /* Calculate the net current on domain boundaries */
-      if (surf == SURFACE_X_MIN) {
-        if (_geometry->getMinXBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
-        }
-        else if (_geometry->getMinXBoundaryType() == VACUUM) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < ny; j++) {
-              cmfd_cell = (i*ny + j)*nx;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                _boundary_currents[0][surf][ng*(i*ny+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
-              }
-            }
-          }
-        }
-        else if (_geometry->getMinXBoundaryType() == INTERFACE) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < ny; j++) {
-              cmfd_cell = (i*ny + j)*nx;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*ny + j)+g];
-                _boundary_currents[0][surf][ng*(i*ny+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      }
-        
-        
-      else if (surf == SURFACE_X_MAX) {
-        if (_geometry->getMaxXBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
-        }
-        else if (_geometry->getMaxXBoundaryType() == VACUUM) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < ny; j++) {
-              cmfd_cell = (i*ny + j)*nx + nx-1;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                _boundary_currents[0][surf][ng*(i*ny+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
-              }
-            }
-          }
-        }
-        else if (_geometry->getMaxXBoundaryType() == INTERFACE) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < ny; j++) {
-              cmfd_cell = (i*ny + j)*nx + nx-1;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*ny + j)+g];
-                _boundary_currents[0][surf][ng*(i*ny+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      }
-    
-    
-      else if (surf == SURFACE_Y_MIN) {
-        if (_geometry->getMinYBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
-        }
-        else if (_geometry->getMinYBoundaryType() == VACUUM) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx*ny + j;
-              for (int g=0; g < ng; g++) {        
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];      
-                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;  
-              }
-            }
-          }  
-        }
-        else if (_geometry->getMinYBoundaryType() == INTERFACE) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx*ny + j;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
-                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      }
-        
-        
-      else if (surf == SURFACE_Y_MAX) {
-        if (_geometry->getMaxYBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
-        }
-        else if (_geometry->getMaxYBoundaryType() == VACUUM) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx*ny + j + nx*(ny-1);
-              for (int g=0; g < ng; g++) {        
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];      
-                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;  
-              }
-            }
-          }  
-        }
-        else if (_geometry->getMaxYBoundaryType() == INTERFACE) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx*ny + j + nx*(ny-1);
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
-                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      } 
-        
-        
-      else if (surf == SURFACE_Z_MIN) {
-        if (_geometry->getMinZBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
-        }
-        else if (_geometry->getMinZBoundaryType() == VACUUM) {
-          for (int i=0; i < ny; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx + j;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
-              }
-            }
-          }
-        }
-        else if (_geometry->getMinZBoundaryType() == INTERFACE) {
-          for (int i=0; i < ny; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx + j;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
-                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      }
-        
-        
-      else if (surf == SURFACE_Z_MAX) {
-        if (_geometry->getMaxZBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
-        }
-        else if (_geometry->getMaxZBoundaryType() == VACUUM) {
-          for (int i=0; i < ny; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx + j + nx*ny*(nz-1);
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
-              }
-            }
-          }
-        }
-        else if (_geometry->getMaxZBoundaryType() == INTERFACE) {
-          for (int i=0; i < ny; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx + j + nx*ny*(nz-1);
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
-                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  
-  /* Calculate the CMFD(new) boundary currents for boundary CMFD cells. */
-  curr_fluxes = _new_flux->getArray();
-#ifdef MPIx
-  if (_domain_communicator != NULL) {
-    getCouplingTerms(_domain_communicator, color, coupling_sizes,
-                    coupling_indexes, coupling_coeffs, coupling_fluxes,
-                    curr_fluxes, offset);
-    for (int i=0; i<NUM_FACES; i++)
-        log_printf(NODAL, "%d surface new_coupling_fluxes: %s", i, 
-                  vec2str(coupling_fluxes[i],coupling_fluxes[i]+dir_sizes[i%3]*ng).c_str());
-  }
-
-#endif  
-  
-  for (int coord=0; coord < 3; coord++) {
-    for (int d=0; d<2; d++) {
-    
-      int dir = 2*d-1;
-      int surf = coord + 3*d;
-    
-    
-      /* Calculate the net current on domain boundaries */
-      if (surf == SURFACE_X_MIN) {
-        if (_geometry->getMinXBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
-        }
-        else if (_geometry->getMinXBoundaryType() == VACUUM) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < ny; j++) {
-              cmfd_cell = (i*ny + j)*nx;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                _boundary_currents[1][surf][ng*(i*ny+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
-              }
-            }
-          }
-        }
-        else if (_geometry->getMinXBoundaryType() == INTERFACE) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < ny; j++) {
-              cmfd_cell = (i*ny + j)*nx;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*ny + j)+g];
-                _boundary_currents[1][surf][ng*(i*ny+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      }
-        
-        
-      else if (surf == SURFACE_X_MAX) {
-        if (_geometry->getMaxXBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
-        }
-        else if (_geometry->getMaxXBoundaryType() == VACUUM) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < ny; j++) {
-              cmfd_cell = (i*ny + j)*nx + nx-1;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                _boundary_currents[1][surf][ng*(i*ny+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
-              }
-            }
-          }
-        }
-        else if (_geometry->getMaxXBoundaryType() == INTERFACE) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < ny; j++) {
-              cmfd_cell = (i*ny + j)*nx + nx-1;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*ny + j)+g];
-                _boundary_currents[1][surf][ng*(i*ny+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      }
-    
-    
-      else if (surf == SURFACE_Y_MIN) {
-        if (_geometry->getMinYBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
-        }
-        else if (_geometry->getMinYBoundaryType() == VACUUM) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx*ny + j;
-              for (int g=0; g < ng; g++) {        
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];      
-                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;  
-              }
-            }
-          }  
-        }
-        else if (_geometry->getMinYBoundaryType() == INTERFACE) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx*ny + j;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
-                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      }
-        
-        
-      else if (surf == SURFACE_Y_MAX) {
-        if (_geometry->getMaxYBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
-        }
-        else if (_geometry->getMaxYBoundaryType() == VACUUM) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx*ny + j + nx*(ny-1);
-              for (int g=0; g < ng; g++) {        
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];      
-                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;  
-              }
-            }
-          }  
-        }
-        else if (_geometry->getMaxYBoundaryType() == INTERFACE) {
-          for (int i=0; i < nz; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx*ny + j + nx*(ny-1);
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
-                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      } 
-        
-        
-      else if (surf == SURFACE_Z_MIN) {
-        if (_geometry->getMinZBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
-        }
-        else if (_geometry->getMinZBoundaryType() == VACUUM) {
-          for (int i=0; i < ny; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx + j;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
-              }
-            }
-          }
-        }
-        else if (_geometry->getMinZBoundaryType() == INTERFACE) {
-          for (int i=0; i < ny; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx + j;
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
-                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      }
-        
-        
-      else if (surf == SURFACE_Z_MAX) {
-        if (_geometry->getMaxZBoundaryType() == REFLECTIVE) {
-          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
-        }
-        else if (_geometry->getMaxZBoundaryType() == VACUUM) {
-          for (int i=0; i < ny; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx + j + nx*ny*(nz-1);
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
-                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
-              }
-            }
-          }
-        }
-        else if (_geometry->getMaxZBoundaryType() == INTERFACE) {
-          for (int i=0; i < ny; i++) {
-            for (int j=0; j < nx; j++) {
-              cmfd_cell = i*nx + j + nx*ny*(nz-1);
-              for (int g=0; g < ng; g++) {
-                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
-                dif_surf_corr = _old_dif_surf_corr->getValue
-                                (cmfd_cell, surf*ng + g);  
-                flux = curr_fluxes[ng*cmfd_cell+g];
-                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
-                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
-                  -getSense(surf)* dif_surf * (flux_next - flux) - 
-                  dif_surf_corr * (flux_next + flux);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  for (int i=0; i<NUM_FACES; i++) {
-    log_printf(NODAL, "%d surface old _boundary_currents: %s", i, 
-              vec2str(_boundary_currents[0][i],_boundary_currents[0][i]+dir_sizes[i%3]*ng).c_str());
-    log_printf(NODAL, "%d surface new _boundary_currents: %s", i, 
-               vec2str(_boundary_currents[1][i],_boundary_currents[1][i]+dir_sizes[i%3]*ng).c_str());
-  }
-
-
-
-  int start_x = 0;
-  int start_y = 0;
-  int start_z = 0;
-
-  if (_domain_communicator != NULL) {
-    start_x = _accumulate_lmx[_domain_communicator->_domain_idx_x];
-    start_y = _accumulate_lmy[_domain_communicator->_domain_idx_y];
-    start_z = _accumulate_lmz[_domain_communicator->_domain_idx_z];
-  }
 
   /* Loop over mesh cells */
 #pragma omp parallel for
   for (int i = 0; i < _local_num_xn * _local_num_yn * _local_num_zn; i++) {
-    
-    int ix = i % _local_num_xn;
-    int iy = (i % (_local_num_xn * _local_num_yn)) / _local_num_xn;
-    int iz = i / (_local_num_xn * _local_num_yn);
-    CMFD_PRECISION dx, dy, dz;
-    dx = _cell_widths_x[ix + start_x];
-    dy = _cell_widths_y[iy + start_y];
-    dz = _cell_widths_z[iz + start_z];
-    CMFD_PRECISION J_old, J_new, flux_old, flux_new;
-    CMFD_PRECISION diff_coef, surface_flux_old, surface_flux_new;
-    int sense;
-    
+
     std::vector<long>::iterator iter;
 
     /* Loop over CMFD groups */
     for (int e = 0; e < _num_cmfd_groups; e++) {
-      
-      flux_old = _old_flux->getValue(i, e);
-      flux_new = _new_flux->getValue(i, e);
-      diff_coef = getDiffusionCoefficient(i, e); //computeLarsensEDCFactor??
 
       /* Loop over FRSs in mesh cell */
       for (iter = _cell_fsrs.at(i).begin();
@@ -1817,10 +1243,6 @@ void Cmfd::updateMOCFlux() {
 
         /* Get the update ratio */
         CMFD_PRECISION update_ratio = getUpdateRatio(i, e, *iter);
-        
-        /* Get the TrackIDs of this FSR */
-        std::string& key = FSRs_to_keys[*iter];
-        std::vector<long>& track_IDs = FSR_keys_map.at(key)->_track_IDs;
 
         /* Limit the update ratio */
         if (update_ratio > 20.0)
@@ -1843,46 +1265,7 @@ void Cmfd::updateMOCFlux() {
             _flux_moments[(*iter)*3*_num_moc_groups + h*3 + 1] *= update_ratio;
             _flux_moments[(*iter)*3*_num_moc_groups + h*3 + 2] *= update_ratio;
           }
-        
-          if (_boundary_angular_fluxes_update == 1) {
-            
-            /* Update the boundary angular fluxes by flux update_ratio*/
-            for(int t=0; t<track_IDs.size(); t++) {
-              long tmp = track_IDs[t] >> 3;
-              _start_flux[((tmp >> 1) << 1) * fluxes_per_track \
-                          + (tmp & 1) * fluxes_per_track \
-                          + (h)] *= update_ratio;
-            }
-          }
-          else if (_boundary_angular_fluxes_update == 2) {
-            
-            /* Update the boundary angular fluxes by surface flux update_ratio*/
-            for(int t=0; t<track_IDs.size(); t++) {
-              int surface = track_IDs[t] & 7;
-              sense = getSense(surface);
-              
-              if (surface == SURFACE_X_MIN || surface == SURFACE_X_MAX) {
-                J_old = _boundary_currents[0][surface][iz*ny+iy];
-                J_new = _boundary_currents[1][surface][iz*ny+iy];
-              }
-              else if (surface == SURFACE_Y_MIN || surface == SURFACE_Y_MAX) {
-                J_old = _boundary_currents[0][surface][iz*nx+ix];
-                J_new = _boundary_currents[1][surface][iz*nx+ix];
-              }
-              else if (surface == SURFACE_Z_MIN || surface == SURFACE_Z_MAX) {
-                J_old = _boundary_currents[0][surface][iy*nx+ix];
-                J_new = _boundary_currents[1][surface][iy*nx+ix];
-              }
-            
-              surface_flux_old = -sense * J_old / (2 * diff_coef) + flux_old;
-              surface_flux_new = -sense * J_new / (2 * diff_coef) + flux_new;
-              
-              long tmp = track_IDs[t] >> 3;
-              _start_flux[((tmp >> 1) << 1) * fluxes_per_track \
-                          + (tmp & 1) * fluxes_per_track \
-                          + (h)] *= (surface_flux_new / surface_flux_old);
-            }
-          }
+
           log_printf(DEBUG, "Updating flux in FSR: %d, cell: %d, MOC group: "
             "%d, CMFD group: %d, ratio: %f", *iter ,i, h, e, update_ratio);
         }
@@ -5667,6 +5050,672 @@ void Cmfd::setWidths(std::vector< std::vector<double> > widths) {
   _non_uniform = true;
   _cell_widths_x = widths[0];
   _cell_widths_y = widths[1];
+}
+
+
+void Cmfd::computeBoundaryCurrent() {
+    /* Calculate the old and new boundary currents for boundary CMFD cells. */
+  int nx = _local_num_xn;
+  int ny = _local_num_yn;
+  int nz = _local_num_zn;
+  int ng = _num_cmfd_groups;
+  
+  DomainCommunicator* comm = _domain_communicator;
+  int* coupling_sizes = NULL;
+  int** coupling_indexes = NULL;
+  CMFD_PRECISION** coupling_coeffs = NULL;
+  CMFD_PRECISION** coupling_fluxes = NULL; 
+  int offset = 0;
+  int color = 0;
+
+  CMFD_PRECISION dif_surf, dif_surf_corr;
+  CMFD_PRECISION flux, flux_next;
+  int cmfd_cell;
+  
+  /* Calculate the MOC(old) boundary currents for boundary CMFD cells. */
+  CMFD_PRECISION* curr_fluxes = _old_flux->getArray();
+  
+  int dir_sizes[3] = {ny*nz, nx*nz, nx*ny};
+#ifdef MPIx  
+  if (_domain_communicator != NULL) {
+    getCouplingTerms(_domain_communicator, color, coupling_sizes,
+                    coupling_indexes, coupling_coeffs, coupling_fluxes,
+                    curr_fluxes, offset);
+    for (int i=0; i<NUM_FACES; i++)
+        log_printf(NODAL, "%d surface old_coupling_fluxes: %s", i, 
+                  vec2str(coupling_fluxes[i],coupling_fluxes[i]+dir_sizes[i%3]*ng).c_str());
+  }
+#endif  
+  
+  for (int coord=0; coord < 3; coord++) {
+    for (int d=0; d<2; d++) {
+    
+      int dir = 2*d-1;
+      int surf = coord + 3*d;
+    
+    
+      /* Calculate the net current on domain boundaries */
+      if (surf == SURFACE_X_MIN) {
+        if (_geometry->getMinXBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
+        }
+        else if (_geometry->getMinXBoundaryType() == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                _boundary_currents[0][surf][ng*(i*ny+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_geometry->getMinXBoundaryType() == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*ny + j)+g];
+                _boundary_currents[0][surf][ng*(i*ny+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+        
+        
+      else if (surf == SURFACE_X_MAX) {
+        if (_geometry->getMaxXBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
+        }
+        else if (_geometry->getMaxXBoundaryType() == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx + nx-1;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                _boundary_currents[0][surf][ng*(i*ny+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_geometry->getMaxXBoundaryType() == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx + nx-1;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*ny + j)+g];
+                _boundary_currents[0][surf][ng*(i*ny+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+    
+    
+      else if (surf == SURFACE_Y_MIN) {
+        if (_geometry->getMinYBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
+        }
+        else if (_geometry->getMinYBoundaryType() == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j;
+              for (int g=0; g < ng; g++) {        
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];      
+                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;  
+              }
+            }
+          }  
+        }
+        else if (_geometry->getMinYBoundaryType() == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+        
+        
+      else if (surf == SURFACE_Y_MAX) {
+        if (_geometry->getMaxYBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
+        }
+        else if (_geometry->getMaxYBoundaryType() == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j + nx*(ny-1);
+              for (int g=0; g < ng; g++) {        
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];      
+                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;  
+              }
+            }
+          }  
+        }
+        else if (_geometry->getMaxYBoundaryType() == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j + nx*(ny-1);
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      } 
+        
+        
+      else if (surf == SURFACE_Z_MIN) {
+        if (_geometry->getMinZBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
+        }
+        else if (_geometry->getMinZBoundaryType() == VACUUM) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_geometry->getMinZBoundaryType() == INTERFACE) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+        
+        
+      else if (surf == SURFACE_Z_MAX) {
+        if (_geometry->getMaxZBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[0][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
+        }
+        else if (_geometry->getMaxZBoundaryType() == VACUUM) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j + nx*ny*(nz-1);
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_geometry->getMaxZBoundaryType() == INTERFACE) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j + nx*ny*(nz-1);
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                _boundary_currents[0][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  /* Calculate the CMFD(new) boundary currents for boundary CMFD cells. */
+  curr_fluxes = _new_flux->getArray();
+#ifdef MPIx
+  if (_domain_communicator != NULL) {
+    getCouplingTerms(_domain_communicator, color, coupling_sizes,
+                    coupling_indexes, coupling_coeffs, coupling_fluxes,
+                    curr_fluxes, offset);
+    for (int i=0; i<NUM_FACES; i++)
+        log_printf(NODAL, "%d surface new_coupling_fluxes: %s", i, 
+                  vec2str(coupling_fluxes[i],coupling_fluxes[i]+dir_sizes[i%3]*ng).c_str());
+  }
+
+#endif  
+  
+  for (int coord=0; coord < 3; coord++) {
+    for (int d=0; d<2; d++) {
+    
+      int dir = 2*d-1;
+      int surf = coord + 3*d;
+    
+    
+      /* Calculate the net current on domain boundaries */
+      if (surf == SURFACE_X_MIN) {
+        if (_geometry->getMinXBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
+        }
+        else if (_geometry->getMinXBoundaryType() == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                _boundary_currents[1][surf][ng*(i*ny+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_geometry->getMinXBoundaryType() == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*ny + j)+g];
+                _boundary_currents[1][surf][ng*(i*ny+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+        
+        
+      else if (surf == SURFACE_X_MAX) {
+        if (_geometry->getMaxXBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*ny*nz*ng);
+        }
+        else if (_geometry->getMaxXBoundaryType() == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx + nx-1;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                _boundary_currents[1][surf][ng*(i*ny+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_geometry->getMaxXBoundaryType() == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < ny; j++) {
+              cmfd_cell = (i*ny + j)*nx + nx-1;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*ny + j)+g];
+                _boundary_currents[1][surf][ng*(i*ny+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+    
+    
+      else if (surf == SURFACE_Y_MIN) {
+        if (_geometry->getMinYBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
+        }
+        else if (_geometry->getMinYBoundaryType() == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j;
+              for (int g=0; g < ng; g++) {        
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];      
+                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;  
+              }
+            }
+          }  
+        }
+        else if (_geometry->getMinYBoundaryType() == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+        
+        
+      else if (surf == SURFACE_Y_MAX) {
+        if (_geometry->getMaxYBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*nz*ng);
+        }
+        else if (_geometry->getMaxYBoundaryType() == VACUUM) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j + nx*(ny-1);
+              for (int g=0; g < ng; g++) {        
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];      
+                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;  
+              }
+            }
+          }  
+        }
+        else if (_geometry->getMaxYBoundaryType() == INTERFACE) {
+          for (int i=0; i < nz; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx*ny + j + nx*(ny-1);
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      } 
+        
+        
+      else if (surf == SURFACE_Z_MIN) {
+        if (_geometry->getMinZBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
+        }
+        else if (_geometry->getMinZBoundaryType() == VACUUM) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_geometry->getMinZBoundaryType() == INTERFACE) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j;
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+        
+        
+      else if (surf == SURFACE_Z_MAX) {
+        if (_geometry->getMaxZBoundaryType() == REFLECTIVE) {
+          memset(_boundary_currents[1][surf], 0.0, sizeof(CMFD_PRECISION)*nx*ny*ng);
+        }
+        else if (_geometry->getMaxZBoundaryType() == VACUUM) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j + nx*ny*(nz-1);
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
+                  (getSense(surf) * dif_surf - dif_surf_corr) * flux;
+              }
+            }
+          }
+        }
+        else if (_geometry->getMaxZBoundaryType() == INTERFACE) {
+          for (int i=0; i < ny; i++) {
+            for (int j=0; j < nx; j++) {
+              cmfd_cell = i*nx + j + nx*ny*(nz-1);
+              for (int g=0; g < ng; g++) {
+                dif_surf = _old_dif_surf->getValue(cmfd_cell, surf*ng + g);
+                dif_surf_corr = _old_dif_surf_corr->getValue
+                                (cmfd_cell, surf*ng + g);  
+                flux = curr_fluxes[ng*cmfd_cell+g];
+                flux_next = coupling_fluxes[surf][ng*(i*nx + j)+g];
+                _boundary_currents[1][surf][ng*(i*nx+j)+g] = 
+                  -getSense(surf)* dif_surf * (flux_next - flux) - 
+                  dif_surf_corr * (flux_next + flux);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  for (int i=0; i<NUM_FACES; i++) {
+    log_printf(NODAL, "%d surface old _boundary_currents: %s", i, 
+              vec2str(_boundary_currents[0][i],_boundary_currents[0][i]+dir_sizes[i%3]*ng).c_str());
+    log_printf(NODAL, "%d surface new _boundary_currents: %s", i, 
+               vec2str(_boundary_currents[1][i],_boundary_currents[1][i]+dir_sizes[i%3]*ng).c_str());
+  }  
+  
+}
+
+
+void Cmfd::updateBoundaryAngularFlux() {
+  
+  log_printf(INFO, "Updating MOC boundary angular flux...");
+  int fluxes_per_track;
+  if (_solve_3D)
+    fluxes_per_track = _num_moc_groups;
+  else
+    fluxes_per_track = _num_moc_groups * _num_polar/2;
+  
+  int nx = _local_num_xn;
+  int ny = _local_num_yn;
+  int nz = _local_num_zn;
+  int ng = _num_cmfd_groups;  
+  
+  /* Get FSR vector maps */
+  ParallelHashMap<std::string, fsr_data*>& FSR_keys_map =
+    _geometry->getFSRKeysMap();
+  
+  /* Get FSR to keys vector indexed by FSR IDs */
+  std::vector<std::string>& FSRs_to_keys = _geometry->getFSRsToKeys();
+
+  int start_x = 0;
+  int start_y = 0;
+  int start_z = 0;
+
+  if (_domain_communicator != NULL) {
+    start_x = _accumulate_lmx[_domain_communicator->_domain_idx_x];
+    start_y = _accumulate_lmy[_domain_communicator->_domain_idx_y];
+    start_z = _accumulate_lmz[_domain_communicator->_domain_idx_z];
+  }
+
+  /* Loop over mesh cells */
+#pragma omp parallel for
+  for (int i = 0; i < _local_num_xn * _local_num_yn * _local_num_zn; i++) {
+    
+    int ix = i % _local_num_xn;
+    int iy = (i % (_local_num_xn * _local_num_yn)) / _local_num_xn;
+    int iz = i / (_local_num_xn * _local_num_yn);
+    CMFD_PRECISION dx, dy, dz;
+    dx = _cell_widths_x[ix + start_x];
+    dy = _cell_widths_y[iy + start_y];
+    dz = _cell_widths_z[iz + start_z];
+    CMFD_PRECISION J_old, J_new, flux_old, flux_new;
+    CMFD_PRECISION diff_coef, surface_flux_old, surface_flux_new;
+    CMFD_PRECISION update_ratio;
+    int sense;
+    
+    std::vector<long>::iterator iter;
+
+    /* Loop over CMFD groups */
+    for (int e = 0; e < _num_cmfd_groups; e++) {
+      
+      flux_old = _old_flux->getValue(i, e);
+      flux_new = _new_flux->getValue(i, e);
+      diff_coef = getDiffusionCoefficient(i, e); //computeLarsensEDCFactor??
+
+      /* Loop over FRSs in mesh cell */
+      for (iter = _cell_fsrs.at(i).begin();
+           iter != _cell_fsrs.at(i).end(); ++iter) {
+        if (_boundary_angular_fluxes_update == 1) {
+          /* Get the update ratio */
+          update_ratio = getUpdateRatio(i, e, *iter);
+          
+          /* Limit the update ratio */
+          if (update_ratio > 20.0)
+            update_ratio = 20.0;
+          if (update_ratio < 0.05)
+            update_ratio = 0.05;
+        }
+        /* Get the TrackIDs of this FSR */
+        std::string& key = FSRs_to_keys[*iter];
+        std::vector<long>& track_IDs = FSR_keys_map.at(key)->_track_IDs;
+
+        for (int h = _group_indices[e]; h < _group_indices[e + 1]; h++) {
+
+          if (_boundary_angular_fluxes_update == 1) {
+            
+            /* Update the boundary angular fluxes by flux update_ratio*/
+            for(int t=0; t<track_IDs.size(); t++) {
+              long tmp = track_IDs[t] >> 3;
+              _start_flux[((tmp >> 1) << 1) * fluxes_per_track \
+                          + (tmp & 1) * fluxes_per_track \
+                          + (h)] *= update_ratio;
+            }
+          }
+          else if (_boundary_angular_fluxes_update == 2) {
+            
+            /* Update the boundary angular fluxes by surface flux update_ratio*/
+            for(int t=0; t<track_IDs.size(); t++) {
+              int surface = track_IDs[t] & 7;
+              sense = getSense(surface);
+              
+              if (surface == SURFACE_X_MIN || surface == SURFACE_X_MAX) {
+                J_old = _boundary_currents[0][surface][iz*ny+iy];
+                J_new = _boundary_currents[1][surface][iz*ny+iy];
+              }
+              else if (surface == SURFACE_Y_MIN || surface == SURFACE_Y_MAX) {
+                J_old = _boundary_currents[0][surface][iz*nx+ix];
+                J_new = _boundary_currents[1][surface][iz*nx+ix];
+              }
+              else if (surface == SURFACE_Z_MIN || surface == SURFACE_Z_MAX) {
+                J_old = _boundary_currents[0][surface][iy*nx+ix];
+                J_new = _boundary_currents[1][surface][iy*nx+ix];
+              }
+            
+              surface_flux_old = -sense * J_old / (2 * diff_coef) + flux_old;
+              surface_flux_new = -sense * J_new / (2 * diff_coef) + flux_new;
+              
+              long tmp = track_IDs[t] >> 3;
+              _start_flux[((tmp >> 1) << 1) * fluxes_per_track \
+                          + (tmp & 1) * fluxes_per_track \
+                          + (h)] *= (surface_flux_new / surface_flux_old);
+            }
+          }
+        }
+      }
+    }
+  }
+
 }
 
 

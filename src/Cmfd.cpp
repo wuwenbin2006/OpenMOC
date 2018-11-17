@@ -5705,10 +5705,16 @@ void Cmfd::updateBoundaryAngularFlux() {
               surface_flux_old = -sense * J_old / (2 * diff_coef) + flux_old;
               surface_flux_new = -sense * J_new / (2 * diff_coef) + flux_new;
               
+              update_ratio = surface_flux_new / surface_flux_old;
+              /* Limit the update ratio */
+              if (update_ratio > 20.0)
+                update_ratio = 20.0;
+              if (update_ratio < 0.05)
+                update_ratio = 0.05;
               long tmp = track_IDs[t] >> 3;
               _start_flux[((tmp >> 1) << 1) * fluxes_per_track \
                           + (tmp & 1) * fluxes_per_track \
-                          + (h)] *= (surface_flux_new / surface_flux_old);
+                          + (h)] *= update_ratio;
             }
           }
         }

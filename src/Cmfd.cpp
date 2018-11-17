@@ -783,7 +783,7 @@ CMFD_PRECISION Cmfd::getDiffusionCoefficient(int cmfd_cell, int group) {
 void Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
     int group, int moc_iteration,double& dif_surf, double& dif_surf_corr) {
 
-  FP_PRECISION current, current_out, current_in;
+  FP_PRECISION current=0, current_out=0, current_in=0;
   CMFD_PRECISION flux_next;
 
   /* Get diffusivity and flux for Mesh cell */
@@ -918,6 +918,9 @@ void Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
           (1.0 - _relaxation_factor) * old_dif_surf_corr;
     }
   }
+  
+log_printf(NODAL, "cmfd_cell=%d,surface=%d,group=%d,current=%f,current_out=%f,current_in=%f ", 
+           cmfd_cell,surface,group,current,current_out,current_in);
 
   /* If it is the first MOC iteration, solve the straight diffusion problem
    * with no MOC correction */
@@ -1016,6 +1019,20 @@ double Cmfd::computeKeff(int moc_iteration) {
   /* Rescale the old and new flux */
   rescaleFlux();
 
+  log_printf(NODAL,"old_flux after rescaleFlux: %s", 
+             vec2str(_old_flux->getArray(), _old_flux->getArray() + 
+                     _old_flux->getNumRows()).c_str());
+  log_printf(NODAL,"new_flux after rescaleFlux: %s", 
+             vec2str(_new_flux->getArray(), _new_flux->getArray() + 
+                     _new_flux->getNumRows()).c_str());
+  
+  log_printf(NODAL,"_old_dif_surf_corr: %s", 
+             vec2str(_old_dif_surf_corr->getArray(), _old_dif_surf_corr->getArray() + 
+                     _old_dif_surf_corr->getNumRows()).c_str());
+  log_printf(NODAL,"_old_dif_surf: %s", 
+             vec2str(_old_dif_surf->getArray(), _old_dif_surf->getArray() + 
+                     _old_dif_surf->getNumRows()).c_str());
+  
   /* Update the MOC flux */
   updateMOCFlux();
 
@@ -1239,10 +1256,17 @@ void Cmfd::updateMOCFlux() {
   
   /* Calculate the MOC(old) boundary currents for boundary CMFD cells. */
   CMFD_PRECISION* curr_fluxes = _old_flux->getArray();
+  
+  int dir_sizes[3] = {ny*nz, nx*nz, nx*ny};
 #ifdef MPIx  
-  getCouplingTerms(_domain_communicator, color, coupling_sizes,
-                   coupling_indexes, coupling_coeffs, coupling_fluxes,
-                   curr_fluxes, offset);
+  if (_domain_communicator != NULL) {
+    getCouplingTerms(_domain_communicator, color, coupling_sizes,
+                    coupling_indexes, coupling_coeffs, coupling_fluxes,
+                    curr_fluxes, offset);
+    for (int i=0; i<NUM_FACES; i++)
+        log_printf(NODAL, "%d surface old_coupling_fluxes: %s", i, 
+                  vec2str(coupling_fluxes[i],coupling_fluxes[i]+dir_sizes[i%3]*ng).c_str());
+  }
 #endif  
   
   for (int coord=0; coord < 3; coord++) {
@@ -1491,9 +1515,15 @@ void Cmfd::updateMOCFlux() {
   /* Calculate the CMFD(new) boundary currents for boundary CMFD cells. */
   curr_fluxes = _new_flux->getArray();
 #ifdef MPIx
-  getCouplingTerms(_domain_communicator, color, coupling_sizes,
-                   coupling_indexes, coupling_coeffs, coupling_fluxes,
-                   curr_fluxes, offset);
+  if (_domain_communicator != NULL) {
+    getCouplingTerms(_domain_communicator, color, coupling_sizes,
+                    coupling_indexes, coupling_coeffs, coupling_fluxes,
+                    curr_fluxes, offset);
+    for (int i=0; i<NUM_FACES; i++)
+        log_printf(NODAL, "%d surface new_coupling_fluxes: %s", i, 
+                  vec2str(coupling_fluxes[i],coupling_fluxes[i]+dir_sizes[i%3]*ng).c_str());
+  }
+
 #endif  
   
   for (int coord=0; coord < 3; coord++) {
@@ -1738,6 +1768,15 @@ void Cmfd::updateMOCFlux() {
       }
     }
   }
+  for (int i=0; i<NUM_FACES; i++) {
+    log_printf(NODAL, "%d surface old _boundary_currents: %s", i, 
+              vec2str(_boundary_currents[0][i],_boundary_currents[0][i]+dir_sizes[i%3]*ng).c_str());
+    log_printf(NODAL, "%d surface new _boundary_currents: %s", i, 
+               vec2str(_boundary_currents[1][i],_boundary_currents[1][i]+dir_sizes[i%3]*ng).c_str());
+  }
+
+
+
   int start_x = 0;
   int start_y = 0;
   int start_z = 0;

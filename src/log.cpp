@@ -298,7 +298,7 @@ int get_log_level() {
  */
 void log_printf(logLevel level, const char* format, ...) {
 
-  char message[1024];
+  char message[1024*1024];
   std::string msg_string;
   if (level >= log_level) {
     va_list args;
@@ -365,11 +365,11 @@ void log_printf(logLevel level, const char* format, ...) {
         std::string level_prefix = ss.str();
 
         /* If message is too long for a line, split into many lines */
-        if (int(msg.length()) > line_length)
-          msg_string = create_multiline_msg(level_prefix, msg);
+        //if (int(msg.length()) > line_length)
+        //  msg_string = create_multiline_msg(level_prefix, msg);
 
         /* Puts message on single line */
-        else
+        //else
           msg_string = level_prefix + msg + "\n";
 #ifdef MPIx        
         collect_message(msg_string);
@@ -551,6 +551,8 @@ void log_printf(logLevel level, const char* format, ...) {
       omp_unset_lock(&log_error_lock);
     }
     else {
+      if(level == NODAL)
+        return;
       printf("%s", &msg_string[0]);
       fflush(stdout);
     }

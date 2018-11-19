@@ -5642,6 +5642,7 @@ void Cmfd::updateBoundaryAngularFlux() {
     CMFD_PRECISION J_old, J_new, flux_old, flux_new;
     CMFD_PRECISION diff_coef, surface_flux_old, surface_flux_new;
     CMFD_PRECISION update_ratio;
+
     int sense;
     
     std::vector<long>::iterator iter;
@@ -5689,17 +5690,22 @@ void Cmfd::updateBoundaryAngularFlux() {
               int surface = track_IDs[t] & 7;
               sense = getSense(surface);
               
+              CMFD_PRECISION dif_surf = _old_dif_surf->getValue
+                                        (i, surface*ng + e);
+              CMFD_PRECISION dif_surf_corr = _old_dif_surf_corr->getValue
+                                             (i, surface*ng + e); 
+              
               if (surface == SURFACE_X_MIN || surface == SURFACE_X_MAX) {
-                J_old = _boundary_currents[0][surface][iz*ny+iy];
-                J_new = _boundary_currents[1][surface][iz*ny+iy];
+                J_old = _boundary_currents[0][surface][iz*ny+iy] * dx;
+                J_new = _boundary_currents[1][surface][iz*ny+iy] * dx;
               }
               else if (surface == SURFACE_Y_MIN || surface == SURFACE_Y_MAX) {
-                J_old = _boundary_currents[0][surface][iz*nx+ix];
-                J_new = _boundary_currents[1][surface][iz*nx+ix];
+                J_old = _boundary_currents[0][surface][iz*nx+ix] * dy;
+                J_new = _boundary_currents[1][surface][iz*nx+ix] * dy;
               }
               else if (surface == SURFACE_Z_MIN || surface == SURFACE_Z_MAX) {
-                J_old = _boundary_currents[0][surface][iy*nx+ix];
-                J_new = _boundary_currents[1][surface][iy*nx+ix];
+                J_old = _boundary_currents[0][surface][iy*nx+ix] * dz;
+                J_new = _boundary_currents[1][surface][iy*nx+ix] * dz;
               }
             
               surface_flux_old = -sense * J_old / (2 * diff_coef) + flux_old;

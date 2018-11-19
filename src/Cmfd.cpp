@@ -5639,7 +5639,7 @@ void Cmfd::updateBoundaryAngularFlux() {
     dx = _cell_widths_x[ix + start_x];
     dy = _cell_widths_y[iy + start_y];
     dz = _cell_widths_z[iz + start_z];
-    CMFD_PRECISION J_old, J_new, flux_old, flux_new;
+    CMFD_PRECISION J_old, J_new, flux_old, flux_new, len;
     CMFD_PRECISION diff_coef, surface_flux_old, surface_flux_new;
     CMFD_PRECISION update_ratio;
 
@@ -5696,21 +5696,25 @@ void Cmfd::updateBoundaryAngularFlux() {
                                              (i, surface*ng + e); 
               
               if (surface == SURFACE_X_MIN || surface == SURFACE_X_MAX) {
-                J_old = _boundary_currents[0][surface][iz*ny+iy] * dx;
-                J_new = _boundary_currents[1][surface][iz*ny+iy] * dx;
+                J_old = _boundary_currents[0][surface][iz*ny+iy];
+                J_new = _boundary_currents[1][surface][iz*ny+iy];
+                len = dx;
               }
               else if (surface == SURFACE_Y_MIN || surface == SURFACE_Y_MAX) {
-                J_old = _boundary_currents[0][surface][iz*nx+ix] * dy;
-                J_new = _boundary_currents[1][surface][iz*nx+ix] * dy;
+                J_old = _boundary_currents[0][surface][iz*nx+ix];
+                J_new = _boundary_currents[1][surface][iz*nx+ix];
+                len = dy;
               }
               else if (surface == SURFACE_Z_MIN || surface == SURFACE_Z_MAX) {
-                J_old = _boundary_currents[0][surface][iy*nx+ix] * dz;
-                J_new = _boundary_currents[1][surface][iy*nx+ix] * dz;
+                J_old = _boundary_currents[0][surface][iy*nx+ix];
+                J_new = _boundary_currents[1][surface][iy*nx+ix];
+                len = dz;
               }
             
-              surface_flux_old = -sense * J_old / (2 * diff_coef) + flux_old;
-              surface_flux_new = -sense * J_new / (2 * diff_coef) + flux_new;
-              
+              //surface_flux_old = -sense * J_old *len / (2 * diff_coef) + flux_old;
+              //surface_flux_new = -sense * J_new *len / (2 * diff_coef) + flux_new;
+              surface_flux_old = (J_old*diff_coef*dif_surf_corr*(1.0/2.0)-J_old*(dif_surf*dif_surf)*len*sense*(1.0/2.0)+(dif_surf*dif_surf)*diff_coef*flux_old*(sense*sense)-J_old*dif_surf*dif_surf_corr*len*(1.0/2.0))/(dif_surf*diff_coef*sense*(dif_surf_corr+dif_surf*sense));;
+              surface_flux_new = (J_new*diff_coef*dif_surf_corr*(1.0/2.0)-J_new*(dif_surf*dif_surf)*len*sense*(1.0/2.0)+(dif_surf*dif_surf)*diff_coef*flux_new*(sense*sense)-J_new*dif_surf*dif_surf_corr*len*(1.0/2.0))/(dif_surf*diff_coef*sense*(dif_surf_corr+dif_surf*sense));
               update_ratio = surface_flux_new / surface_flux_old;
               /* Limit the update ratio */
               if (update_ratio > 20.0)

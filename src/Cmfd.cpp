@@ -783,7 +783,7 @@ CMFD_PRECISION Cmfd::getDiffusionCoefficient(int cmfd_cell, int group) {
 void Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
     int group, int moc_iteration,double& dif_surf, double& dif_surf_corr) {
 
-  FP_PRECISION current=0, current_out=0, current_in=0;
+  FP_PRECISION current, current_out, current_in;
   CMFD_PRECISION flux_next;
 
   /* Get diffusivity and flux for Mesh cell */
@@ -919,7 +919,7 @@ void Cmfd::getSurfaceDiffusionCoefficient(int cmfd_cell, int surface,
     }
   }
   
-log_printf(NODAL, "cmfd_cell=%d,surface=%d,group=%d,current=%f,current_out=%f,current_in=%f ", 
+log_printf(DEBUG, "cmfd_cell=%d,surface=%d,group=%d,current=%f,current_out=%f,current_in=%f ", 
            cmfd_cell,surface,group,current,current_out,current_in);
 
   /* If it is the first MOC iteration, solve the straight diffusion problem
@@ -1019,17 +1019,17 @@ double Cmfd::computeKeff(int moc_iteration) {
   /* Rescale the old and new flux */
   rescaleFlux();
 
-  log_printf(NODAL,"old_flux after rescaleFlux: %s", 
+  log_printf(DEBUG,"old_flux after rescaleFlux: %s", 
              vec2str(_old_flux->getArray(), _old_flux->getArray() + 
                      _old_flux->getNumRows()).c_str());
-  log_printf(NODAL,"new_flux after rescaleFlux: %s", 
+  log_printf(DEBUG,"new_flux after rescaleFlux: %s", 
              vec2str(_new_flux->getArray(), _new_flux->getArray() + 
                      _new_flux->getNumRows()).c_str());
   
-  log_printf(NODAL,"_old_dif_surf_corr: %s", 
+  log_printf(DEBUG,"_old_dif_surf_corr: %s", 
              vec2str(_old_dif_surf_corr->getArray(), _old_dif_surf_corr->getArray() + 
                      _old_dif_surf_corr->getNumRows()).c_str());
-  log_printf(NODAL,"_old_dif_surf: %s", 
+  log_printf(DEBUG,"_old_dif_surf: %s", 
              vec2str(_old_dif_surf->getArray(), _old_dif_surf->getArray() + 
                      _old_dif_surf->getNumRows()).c_str());
   
@@ -5053,6 +5053,10 @@ void Cmfd::setWidths(std::vector< std::vector<double> > widths) {
 }
 
 
+/**
+ * @brief Compute the old and new net current of the boundaries using the 
+ *        nonlinear CMFD current equation
+ */
 void Cmfd::computeBoundaryCurrent() {
     /* Calculate the old and new boundary currents for boundary CMFD cells. */
   int nx = _local_num_xn;
@@ -5082,7 +5086,7 @@ void Cmfd::computeBoundaryCurrent() {
                     coupling_indexes, coupling_coeffs, coupling_fluxes,
                     curr_fluxes, offset);
     for (int i=0; i<NUM_FACES; i++)
-        log_printf(NODAL, "%d surface old_coupling_fluxes: %s", i, 
+        log_printf(DEBUG, "%d surface old_coupling_fluxes: %s", i, 
                   vec2str(coupling_fluxes[i],coupling_fluxes[i]+dir_sizes[i%3]*ng).c_str());
   }
 #endif  
@@ -5338,7 +5342,7 @@ void Cmfd::computeBoundaryCurrent() {
                     coupling_indexes, coupling_coeffs, coupling_fluxes,
                     curr_fluxes, offset);
     for (int i=0; i<NUM_FACES; i++)
-        log_printf(NODAL, "%d surface new_coupling_fluxes: %s", i, 
+        log_printf(DEBUG, "%d surface new_coupling_fluxes: %s", i, 
                   vec2str(coupling_fluxes[i],coupling_fluxes[i]+dir_sizes[i%3]*ng).c_str());
   }
 
@@ -5588,15 +5592,19 @@ void Cmfd::computeBoundaryCurrent() {
   }
   
   for (int i=0; i<NUM_FACES; i++) {
-    log_printf(NODAL, "%d surface old _boundary_currents: %s", i, 
+    log_printf(DEBUG, "%d surface old _boundary_currents: %s", i, 
               vec2str(_boundary_currents[0][i],_boundary_currents[0][i]+dir_sizes[i%3]*ng).c_str());
-    log_printf(NODAL, "%d surface new _boundary_currents: %s", i, 
+    log_printf(DEBUG, "%d surface new _boundary_currents: %s", i, 
                vec2str(_boundary_currents[1][i],_boundary_currents[1][i]+dir_sizes[i%3]*ng).c_str());
   }  
   
 }
 
 
+/**
+ * @brief Update the boundary fluxes using cell averaged fluxes or cell surface 
+ *        fluxes. 
+ */
 void Cmfd::updateBoundaryAngularFlux() {
   
   log_printf(INFO, "Updating MOC boundary angular flux...");

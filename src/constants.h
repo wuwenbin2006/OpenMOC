@@ -4,7 +4,7 @@
  * @date April 9, 2015.
  * @author William Boyd, MIT, Course 22 (wboyd@mit.edu)
  */
-
+#include <limits>
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 
@@ -153,6 +153,12 @@
 #define MODULAR_RAY_TRACING 1
 #define SIMPLIFIED_MODULAR_RAY_TRACING 2
 
+/* The integer representation of region operators */
+constexpr int OP_LEFT_PAREN   {std::numeric_limits<int>::max()};
+constexpr int OP_RIGHT_PAREN  {std::numeric_limits<int>::max() - 1};
+constexpr int OP_COMPLEMENT   {std::numeric_limits<int>::max() - 2};
+constexpr int OP_INTERSECTION {std::numeric_limits<int>::max() - 3};
+constexpr int OP_UNION        {std::numeric_limits<int>::max() - 4};
 
 #ifdef NVCC
 

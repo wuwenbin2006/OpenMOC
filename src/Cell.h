@@ -116,6 +116,16 @@ private:
 
   void ringify(std::vector<Cell*>& subcells, double max_radius);
   void sectorize(std::vector<Cell*>& subcells);
+  
+  /* the region specification */
+  std::string region_spec;
+  
+  /* Definition of spatial region as Boolean expression of half-spaces */
+  std::vector<int> region;
+  /* Reverse Polish notation for region expression */
+  std::vector<int> rpn;
+  /*Does the region contain only intersections? */
+  bool simple;  
 
 public:
   Cell(int id=0, const char* name="");
@@ -137,7 +147,7 @@ public:
   double* getRotationMatrix();
   double* getTranslation();
   void retrieveRotation(double* rotations, int num_axes,
-			std::string units="degrees");
+            std::string units="degrees");
   void retrieveTranslation(double* translations, int num_axes);
   int getNumRings();
   int getNumSectors();

@@ -18,12 +18,14 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <vector>
 #include <sstream>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <string.h>
 #include <stdexcept>
+#include "constants.h"
 #include <time.h>
 #include <math.h>
 #include <sys/types.h>
@@ -114,5 +116,8 @@ std::string create_multiline_msg(std::string level, std::string message);
 #ifdef MPIx
 void log_set_ranks(MPI_Comm comm);
 #endif
+
+std::vector<int> tokenize(const std::string region_spec);
+std::vector<int> generate_rpn(int cell_id, std::vector<int> infix);
 
 #endif /* LOG_H_ */

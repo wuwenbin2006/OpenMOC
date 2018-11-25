@@ -629,3 +629,160 @@ void log_set_ranks(MPI_Comm comm) {
   MPI_Comm_rank(comm, &rank);
 }
 #endif
+
+
+
+
+
+//==============================================================================
+//! Convert region specification string to integer tokens.
+//!
+//! The characters (, ), |, and ~ count as separate tokens since they represent
+//! operators.
+//==============================================================================
+
+std::vector<int>
+tokenize(const std::string region_spec) {
+  // Check for an empty region_spec first.
+  std::vector<int> tokens;
+  if (region_spec.empty()) {
+      return tokens;
+    }
+
+  // Parse all halfspaces and operators except for intersection (whitespace).
+  for (int i = 0; i < region_spec.size(); ) {
+      if (region_spec[i] == '(') {
+          tokens.push_back(OP_LEFT_PAREN);
+          i++;
+
+      } else if (region_spec[i] == ')') {
+          tokens.push_back(OP_RIGHT_PAREN);
+          i++;
+
+      } else if (region_spec[i] == '|') {
+          tokens.push_back(OP_UNION);
+          i++;
+
+      } else if (region_spec[i] == '~') {
+          tokens.push_back(OP_COMPLEMENT);
+          i++;
+
+      } else if (region_spec[i] == '-' || region_spec[i] == '+'
+               || std::isdigit(region_spec[i])) {
+          // This is the start of a halfspace specification.  Iterate j until we
+          // find the end, then push-back everything between i and j.
+          int j = i + 1;
+          while (j < region_spec.size() && std::isdigit(region_spec[j])) {j++;}
+          tokens.push_back(std::stoi(region_spec.substr(i, j-i)));
+          i = j;
+
+      } else if (std::isspace(region_spec[i])) {
+          i++;
+
+      } else {
+          std::stringstream err_msg;
+          err_msg << "Region specification contains invalid character, \""
+                  << region_spec[i] << "\"";
+          log_printf(NORMAL, err_msg.str().c_str());
+        }
+    }
+
+  // Add in intersection operators where a missing operator is needed.
+  int i = 0;
+  while (i < tokens.size()-1) {
+      bool left_compat {(tokens[i] < OP_UNION) || (tokens[i] == OP_RIGHT_PAREN)};
+      bool right_compat {(tokens[i+1] < OP_UNION)
+                         || (tokens[i+1] == OP_LEFT_PAREN)
+                         || (tokens[i+1] == OP_COMPLEMENT)};
+      if (left_compat && right_compat) {
+          tokens.insert(tokens.begin()+i+1, OP_INTERSECTION);
+        }
+      i++;
+    }
+
+  return tokens;
+}
+
+//==============================================================================
+//! Convert infix region specification to Reverse Polish Notation (RPN)
+//!
+//! This function uses the shunting-yard algorithm.
+//==============================================================================
+
+std::vector<int>
+generate_rpn(int cell_id, std::vector<int> infix)
+{
+  std::vector<int> rpn;
+  std::vector<int> stack;
+
+for (int token : infix) {
+      if (token < OP_UNION) {
+          // If token is not an operator, add it to output
+          rpn.push_back(token);
+
+      } else if (token < OP_RIGHT_PAREN) {
+          // Regular operators union, intersection, complement
+          while (stack.size() > 0) {
+              int op = stack.back();
+
+              if (op < OP_RIGHT_PAREN &&
+                  ((token == OP_COMPLEMENT && token < op) ||
+                   (token != OP_COMPLEMENT && token <= op))) {
+                  // While there is an operator, op, on top of the stack, if the token
+                  // is left-associative and its precedence is less than or equal to
+                  // that of op or if the token is right-associative and its precedence
+                  // is less than that of op, move op to the output queue and push the
+                  // token on to the stack. Note that only complement is
+                  // right-associative.
+                  rpn.push_back(op);
+                  stack.pop_back();
+              } else {
+                  break;
+                }
+            }
+
+          stack.push_back(token);
+
+      } else if (token == OP_LEFT_PAREN) {
+          // If the token is a left parenthesis, push it onto the stack
+          stack.push_back(token);
+
+      } else {
+          // If the token is a right parenthesis, move operators from the stack to
+          // the output queue until reaching the left parenthesis.
+          for (auto it = stack.rbegin(); *it != OP_LEFT_PAREN; it++) {
+              // If we run out of operators without finding a left parenthesis, it
+              // means there are mismatched parentheses.
+              if (it == stack.rend()) {
+                  std::stringstream err_msg;
+                  err_msg << "Mismatched parentheses in region specification for cell "
+                          << cell_id;
+                  log_printf(NORMAL, err_msg.str().c_str());
+                }
+
+              rpn.push_back(stack.back());
+              stack.pop_back();
+            }
+
+          // Pop the left parenthesis.
+          stack.pop_back();
+        }
+    }
+
+  while (stack.size() > 0) {
+      int op = stack.back();
+
+      // If the operator is a parenthesis it is mismatched.
+      if (op >= OP_RIGHT_PAREN) {
+          std::stringstream err_msg;
+          err_msg << "Mismatched parentheses in region specification for cell "
+                  << cell_id;
+          log_printf(NORMAL, err_msg.str().c_str());
+        }
+
+      rpn.push_back(stack.back());
+      stack.pop_back();
+    }
+
+  return rpn;
+}

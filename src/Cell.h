@@ -199,6 +199,9 @@ public:
 
   bool isFissionable();
   bool containsPoint(Point* point);
+  bool contains(Point* point) const;
+  bool contains_simple(Point* point) const;
+  bool contains_complex(Point* point) const;
   bool containsCoords(LocalCoords* coords);
   double minSurfaceDist(Point* point, double azim, double polar);
   double minSurfaceDist(LocalCoords* coords);

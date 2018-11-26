@@ -1164,7 +1164,8 @@ bool Cell::containsPoint(Point* point) {
 
   /* If not, query the Cell's bounding Region */
   else
-    return _region->containsPoint(point);
+    //return _region->containsPoint(point);
+    return contains(point);
 }
 
 
@@ -1686,5 +1687,79 @@ void Cell::region2str() {
         simple = false;
         break;
     }
+  }
+}
+
+
+bool Cell::contains(Point* point) const {
+  if (simple) {
+    return contains_simple(point);
+  } 
+  else {
+    return contains_complex(point);
+  }
+}
+
+bool Cell::contains_simple(Point* point) const {
+  
+  Surface* surface;
+  for (int token : rpn) {
+    if (token < OP_UNION) {
+        // If the token is not an operator, evaluate the sense of particle with
+        // respect to the surface and see if the token matches the sense. 
+      surface = _all_surfaces[abs(token)];
+      bool sense = (surface->evaluate(point) >= 0.);
+      if (sense != (token > 0)) 
+        return false;
+    }
+  }
+  return true;
+}
+
+
+bool Cell::contains_complex(Point* point) const {
+  
+  // Make a stack of booleans.  We don't know how big it needs to be, but we do
+  // know that rpn.size() is an upper-bound.
+  bool stack[rpn.size()];
+  int i_stack = -1;
+  Surface* surface;
+  
+  for (int token : rpn) {
+    // If the token is a binary operator (intersection/union), apply it to
+    // the last two items on the stack. If the token is a unary operator
+    // (complement), apply it to the last item on the stack.
+    if (token == OP_UNION) {
+        stack[i_stack-1] = stack[i_stack-1] || stack[i_stack];
+        i_stack --;
+    } 
+    else if (token == OP_INTERSECTION) {
+        stack[i_stack-1] = stack[i_stack-1] && stack[i_stack];
+        i_stack --;
+    } 
+    else if (token == OP_COMPLEMENT) {
+        stack[i_stack] = !stack[i_stack];
+    } 
+    else {
+      // If the token is not an operator, evaluate the sense of particle with
+      // respect to the surface and see if the token matches the sense. If the
+      // particle's surface attribute is set and matches the token, that
+      // overrides the determination based on sense().
+      i_stack ++;
+      surface = _all_surfaces[abs(token)];
+      bool sense = (surface->evaluate(point) >= 0.);
+          stack[i_stack] = (sense == (token > 0));
+    }
+  }
+    
+  if (i_stack == 0) {
+      // The one remaining bool on the stack indicates whether the particle is
+      // in the cell.
+      return stack[i_stack];
+  } 
+  else {
+      // This case occurs if there is no region specification since i_stack will
+      // still be -1.
+      return true;
   }
 }

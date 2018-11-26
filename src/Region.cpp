@@ -30,6 +30,17 @@ void Region::addNode(Region* node, bool clone) {
     _nodes.push_back(node->clone());
   else
     _nodes.push_back(node);
+  
+  if (_region_type == INTERSECTION) 
+    if (region_spec.empty())
+      region_spec += ("(" + node->getRegionSpec() + ")");
+    else
+      region_spec += (" (" + node->getRegionSpec() + ")");
+  else if (_region_type == UNION)
+    if (region_spec.empty())
+      region_spec += ("(" + node->getRegionSpec() + ")");
+    else
+      region_spec += (" | (" + node->getRegionSpec() + ")");
 }
 
 
@@ -857,6 +868,10 @@ void Complement::addNode(Region* node, bool clone) {
     _nodes.push_back(node->clone());
   else
     _nodes.push_back(node);
+  
+  std::stringstream string;
+  string << "~(" << node->getRegionSpec() << ")";
+  region_spec = string.str();
 }
 
 
@@ -888,6 +903,13 @@ Halfspace::Halfspace(int halfspace, Surface* surface) {
   _region_type = HALFSPACE;
   _surface = surface;
   _halfspace = halfspace;
+  
+  std::stringstream string;
+  if(halfspace ==1)
+    string << "+" << surface->getId();
+  else
+    string << "-" << surface->getId();  
+  region_spec = string.str();
 }
 
 
@@ -925,6 +947,13 @@ int Halfspace::getHalfspace() {
  */
 void Halfspace::reverseHalfspace() {
   _halfspace *= -1;
+  
+  if (region_spec[0] == '+')
+    region_spec[0] = '-'; 
+  else if (std::isdigit(region_spec[0]))
+    region_spec.insert(region_spec.begin(), '-');
+  else
+    region_spec[0] = '+';
 }
 
 
@@ -1168,4 +1197,11 @@ void RectangularPrism::setBoundaryType(boundaryType boundary_type) {
   /* Assign the boundary to each of the bounding XPlanes and YPlanes */
   for (iter = all_surfaces.begin(); iter != all_surfaces.end(); iter++)
     iter->second->getSurface()->setBoundaryType(boundary_type);
+}
+
+
+
+std::string Region::getRegionSpec() {
+  
+  return region_spec;
 }

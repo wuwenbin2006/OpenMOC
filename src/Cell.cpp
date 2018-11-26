@@ -1674,9 +1674,13 @@ int Cell::getNumZCylinders() {
  */
 void Cell::region2str() {
   
+  if (_region == NULL)
+    return;
+  
   /* the region specification. For the funture, region_spec should be calculated
      directly during the region creating operators */
-  region_spec = _region->toString();
+  //region_spec = _region->toString();
+  region_spec = _region->getRegionSpec();
   
   // Get a tokenized representation of the region specification.
   region = tokenize(region_spec);

@@ -52,10 +52,15 @@ protected:
 
   /** The parent region, a region which has this region among its nodes */
   Region* _parent_region;
+  
+  /* the region specification in string */
+  std::string region_spec;
 
 public:
   Region();
   virtual ~Region();
+  
+  std::string getRegionSpec();
 
   /* Functions for constructing the Region / other Regions */
   virtual void addNode(Region* node, bool clone=true);

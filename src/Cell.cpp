@@ -2,6 +2,7 @@
 #include <set>
 
 
+std::map<int, Surface*> Cell::_all_surfaces;
 int Cell::_n = 0;
 
 static int auto_id = DEFAULT_INIT_ID;
@@ -1664,3 +1665,26 @@ int Cell::getNumZCylinders() {
 }
 
 
+void Cell::region2str() {
+  
+  /* the region specification */
+  region_spec = _region->toString();
+  
+  // Get a tokenized representation of the region specification.
+  region = tokenize(region_spec);
+  region.shrink_to_fit();
+  
+  
+  // Convert the infix region spec to RPN.
+  rpn = generate_rpn(_id, region);
+  rpn.shrink_to_fit();
+  
+  // Check if this is a simple cell.
+  simple = true;
+  for (int token : rpn) {
+    if ((token == OP_COMPLEMENT) || (token == OP_UNION)) {
+        simple = false;
+        break;
+    }
+  }
+}

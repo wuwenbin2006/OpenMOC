@@ -128,6 +128,8 @@ private:
   bool simple;  
 
 public:
+  static std::map<int, Surface*> _all_surfaces;
+  void region2str();
   Cell(int id=0, const char* name="");
   virtual ~Cell();
   int getUid() const;

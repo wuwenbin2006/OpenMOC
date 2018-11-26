@@ -1797,6 +1797,17 @@ void Geometry::initializeFlatSourceRegions() {
       iter->second->getSigmaA();
   }
 
+
+  std::map<int, Cell*>::iterator c_iter;
+  Cell::_all_surfaces = getAllSurfaces();
+  Cell* cell;
+  std::map<int, Cell*> all_cells = getAllCells();
+    
+  for (c_iter = all_cells.begin(); c_iter != all_cells.end(); ++c_iter) {
+    cell = (*c_iter).second;
+    cell->region2str();
+  }
+
   /* Initialize CMFD */
   if (_cmfd != NULL)
     initializeCmfd();

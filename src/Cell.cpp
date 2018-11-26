@@ -1,8 +1,9 @@
 #include "Cell.h"
 #include <set>
 
-
+/* For the use of surface indexing */
 std::map<int, Surface*> Cell::_all_surfaces;
+
 int Cell::_n = 0;
 
 static int auto_id = DEFAULT_INIT_ID;
@@ -1164,6 +1165,7 @@ bool Cell::containsPoint(Point* point) {
 
   /* If not, query the Cell's bounding Region */
   else
+    /* Get the result based on RPN algorithm */
     //return _region->containsPoint(point);
     return contains(point);
 }
@@ -1666,9 +1668,14 @@ int Cell::getNumZCylinders() {
 }
 
 
+/**
+ * @brief Translate the region to a string, then to a tokenized representation 
+ *        and then to RPN. Also, the simplity of the region is determined.
+ */
 void Cell::region2str() {
   
-  /* the region specification */
+  /* the region specification. For the funture, region_spec should be calculated
+     directly during the region creating operators */
   region_spec = _region->toString();
   
   // Get a tokenized representation of the region specification.
@@ -1691,6 +1698,14 @@ void Cell::region2str() {
 }
 
 
+/**
+ * @brief Determines whether a Point is contained inside a Cell's Region.
+ * @details Queries the Region bounding the Cell to determine if the Point
+ *          is within the Region. This point is only inside the Cell if it
+ *          is on the same side of every Surface bounding the Cell.
+ * @param point a pointer to a Point
+ * @returns true if the Point is inside the Cell; otherwise false
+ */
 bool Cell::contains(Point* point) const {
   if (simple) {
     return contains_simple(point);
@@ -1700,13 +1715,15 @@ bool Cell::contains(Point* point) const {
   }
 }
 
+
+
 bool Cell::contains_simple(Point* point) const {
   
   Surface* surface;
   for (int token : rpn) {
     if (token < OP_UNION) {
-        // If the token is not an operator, evaluate the sense of particle with
-        // respect to the surface and see if the token matches the sense. 
+      // If the token is not an operator, evaluate the sense of particle with
+      // respect to the surface and see if the token matches the sense. 
       surface = _all_surfaces[abs(token)];
       bool sense = (surface->evaluate(point) >= 0.);
       if (sense != (token > 0)) 
@@ -1715,6 +1732,7 @@ bool Cell::contains_simple(Point* point) const {
   }
   return true;
 }
+
 
 
 bool Cell::contains_complex(Point* point) const {

@@ -324,6 +324,7 @@ Plane::Plane(const double A, const double B,
  * @param halfspace the halfspace of the Surface to consider
  * @return the minimum x value of -INFINITY
  */
+//FIXME Plane could also be special plane like xPlane.
 double Plane::getMinX(int halfspace) {
   return -std::numeric_limits<double>::infinity();
 }
